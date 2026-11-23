@@ -14,7 +14,7 @@ header b{font-size:19px}
 header div{font-size:12px;opacity:.85}
 main{flex:1;overflow-y:auto;padding:12px 12px 140px}
 nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--w);border-top:1px solid var(--ln);z-index:5}
-nav button{flex:1;border:0;background:none;padding:7px 0 8px;font-size:11px;color:var(--mu)}
+nav button{flex:1;border:0;background:none;padding:7px 0 8px;font-size:10.5px;color:var(--mu)}
 nav button i{display:block;font-style:normal;font-size:20px}
 nav button.on{color:var(--g);font-weight:700}
 .inp{width:100%;padding:11px 12px;border:1px solid var(--ln);border-radius:8px;font-size:16px;background:var(--w);color:var(--ink);margin:0 0 8px}
@@ -75,6 +75,14 @@ label{display:block;font-size:13px;color:var(--mu);margin:4px 0 3px}
 .stat .big{background:var(--ink);color:#fff;border-color:var(--ink)}
 .stat .big b{color:var(--y)}
 h4{margin:16px 0 6px;font-size:15px;color:var(--mu)}
+
+.alert{background:#fde8e6;color:var(--red);border:1px solid #f0b3ad;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-weight:600}
+.alert small{display:block;font-weight:400;color:#7a2a24}
+.lowt{color:var(--red);font-weight:700}
+.okt{color:var(--gd)}
+.stat .warn{background:#fde8e6;border-color:#f0b3ad}
+.stat .warn b{color:var(--red)}
+.row.lowrow{background:#fff6f5}
 #toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:20px;z-index:50;display:none;max-width:85%;text-align:center}
 #printArea{display:none}
 @media print{
@@ -92,8 +100,9 @@ h4{margin:16px 0 6px;font-size:15px;color:var(--mu)}
 <div class="bar" id="bar"><div><small id="barN"></small><br><b id="barT"></b></div><button class="btn" onclick="openCart()">பில் பார்க்க</button></div>
 <nav id="nav">
   <button data-t="bill"><i>🧾</i>பில்</button>
-  <button data-t="products"><i>📦</i>பொருட்கள்</button>
+  <button data-t="products"><i>📦</i>சரக்கு</button>
   <button data-t="history"><i>🕘</i>வரலாறு</button>
+  <button data-t="credit"><i>📒</i>கடன்</button>
   <button data-t="report"><i>📊</i>அறிக்கை</button>
   <button data-t="settings"><i>⚙️</i>அமைப்பு</button>
 </nav>
@@ -110,19 +119,20 @@ var store={
   set:function(v){try{if(window.Android)Android.save(KEY,v);else localStorage.setItem(KEY,v)}catch(e){}}
 };
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function mk(n,p,u){return{id:uid(),name:n,price:p,unit:u}}
+function mk(n,p,u,c,s,m){var o={id:uid(),name:n,price:p,unit:u,cost:c||0};if(typeof s==='number'){o.stock=s;o.min=(m==null?5:m)}return o}
 function defaults(){
   return{
     shop:{name:'மளிகை கடை',addr:'',phone:'',footer:'நன்றி! மீண்டும் வருக!'},
-    products:[mk('பச்சரிசி',60,'kg'),mk('இட்லி அரிசி',50,'kg'),mk('சர்க்கரை',45,'kg'),mk('துவரம் பருப்பு',150,'kg'),
-      mk('உளுந்தம் பருப்பு',140,'kg'),mk('கடலைப் பருப்பு',100,'kg'),mk('உப்பு',20,'pkt'),mk('மிளகாய் தூள்',60,'pkt'),
-      mk('மஞ்சள் தூள்',30,'pkt'),mk('நல்லெண்ணெய்',400,'L'),mk('கடலை எண்ணெய்',190,'L'),mk('சோப்பு',35,'pcs')],
-    bills:[],nextNo:1
+    products:[mk('பச்சரிசி',60,'kg',52,40,10),mk('இட்லி அரிசி',50,'kg',43,30,10),mk('சர்க்கரை',45,'kg',40,25,8),mk('துவரம் பருப்பு',150,'kg',135,20,5),
+      mk('உளுந்தம் பருப்பு',140,'kg',125,15,5),mk('கடலைப் பருப்பு',100,'kg',88,15,5),mk('உப்பு',20,'pkt',16,60,15),mk('மிளகாய் தூள்',60,'pkt',48,30,8),
+      mk('மஞ்சள் தூள்',30,'pkt',23,30,8),mk('நல்லெண்ணெய்',400,'L',360,12,4),mk('கடலை எண்ணெய்',190,'L',170,20,6),mk('சோப்பு',35,'pcs',29,48,12)],
+    bills:[],led:[],nextNo:1
   };
 }
 var DB;
 try{var raw=store.get();DB=raw?JSON.parse(raw):defaults()}catch(e){DB=defaults()}
 if(!DB||!DB.products||!DB.bills||!DB.shop){DB=defaults()}
+if(!DB.led)DB.led=[];
 function save(){store.set(JSON.stringify(DB))}
 save();
 
@@ -164,7 +174,7 @@ $('#mw').addEventListener('click',function(e){if(e.target===this)closeModal()});
 var tab='bill';
 var cart=[];
 var editNo=null,editTs=null;
-var st={pq:'',mq:'',hf:'today',hd:'',hq:'',rp:'today'};
+var st={cf:'owe',cq:'',pq:'',mq:'',mf:'all',hf:'today',hd:'',hq:'',rp:'today'};
 
 function go(t){
   tab=t;
@@ -175,15 +185,46 @@ document.querySelectorAll('#nav button').forEach(function(b){b.onclick=function(
 
 function render(){
   $('#hShop').textContent=DB.shop.name||'மளிகை கடை';
-  $('#hSub').textContent={bill:'புதிய பில்',products:'பொருட்கள் பட்டியல்',history:'பில் வரலாறு',report:'விற்பனை அறிக்கை',settings:'கடை அமைப்புகள்'}[tab];
-  ({bill:rBill,products:rProducts,history:rHistory,report:rReport,settings:rSettings})[tab]();
+  $('#hSub').textContent={bill:'புதிய பில்',products:'சரக்கு & பொருட்கள்',history:'பில் வரலாறு',credit:'கடன் கணக்கு',report:'விற்பனை அறிக்கை',settings:'கடை அமைப்புகள்'}[tab];
+  ({bill:rBill,products:rProducts,history:rHistory,credit:rCredit,report:rReport,settings:rSettings})[tab]();
   updateBar();
   $('#main').scrollTop=0;
 }
 
+/* ---------- STOCK HELPERS ---------- */
+function isTracked(p){return typeof p.stock==='number'}
+function isLow(p){return isTracked(p)&&p.stock<=num(p.min)}
+function findP(id){return DB.products.filter(function(x){return x.id===id})[0]}
+function adjStock(id,d){var p=id&&findP(id);if(p&&isTracked(p))p.stock=q(p.stock+d)}
+function lowList(){return DB.products.filter(isLow)}
+function credTot(){var m=custMap();return Object.keys(m).reduce(function(s,k){return s+Math.max(0,m[k].bal)},0)}
+function stockStats(){
+  var s={tracked:0,low:0,costV:0,saleV:0};
+  DB.products.forEach(function(p){
+    if(!isTracked(p))return;
+    s.tracked++;if(isLow(p))s.low++;
+    var n=Math.max(0,p.stock);
+    s.saleV+=n*num(p.price);
+    s.costV+=n*(num(p.cost)>0?num(p.cost):num(p.price));
+  });
+  return s;
+}
+function stockLine(p){
+  if(!isTracked(p))return '';
+  var t='இருப்பு: '+q(p.stock)+' '+UNITS[p.unit];
+  if(p.stock<=0)return '<br><small class="lowt">⚠️ '+t+' — தீர்ந்தது</small>';
+  if(isLow(p))return '<br><small class="lowt">⚠️ '+t+' — குறைவு</small>';
+  return '<br><small class="okt">'+t+'</small>';
+}
+
 /* ---------- BILL TAB ---------- */
 function rBill(){
-  $('#main').innerHTML=
+  var lw=lowList(),banner='';
+  if(lw.length){
+    banner='<div class="alert" onclick="st.mf=\'low\';go(\'products\')">⚠️ '+lw.length+' பொருட்கள் குறைவு / தீர்ந்தது<small>'+
+      lw.slice(0,4).map(function(p){return esc(p.name)}).join(', ')+(lw.length>4?' ...':'')+' — பார்க்க தொடவும்</small></div>';
+  }
+  $('#main').innerHTML=banner+
    '<input class="inp" id="pq" placeholder="🔍 பொருள் தேடு" value="'+esc(st.pq)+'">'+
    '<button class="btn ghost full" onclick="customItem()">➕ பட்டியலில் இல்லாத பொருள்</button>'+
    '<div class="list" id="plist"></div>';
@@ -192,19 +233,21 @@ function rBill(){
 }
 function sortedProducts(){return DB.products.slice().sort(function(a,b){return a.name.localeCompare(b.name,'ta')})}
 function fillPlist(){
+  if(!$('#plist'))return;
   var k=st.pq.trim().toLowerCase();
   var l=sortedProducts().filter(function(p){return p.name.toLowerCase().indexOf(k)>=0});
   if(!l.length){$('#plist').innerHTML='<div class="empty">பொருள் இல்லை.<br>"பொருட்கள்" பகுதியில் சேர்க்கவும்.</div>';return}
   $('#plist').innerHTML=l.map(function(p){
     var c=cart.filter(function(x){return x.pid===p.id})[0];
-    return '<div class="row" onclick="addToCart(\''+p.id+'\')"><div class="t"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' / '+UNITS[p.unit]+'</small></div>'+
+    return '<div class="row'+(isLow(p)?' lowrow':'')+'" onclick="addToCart(\''+p.id+'\')"><div class="t"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' / '+UNITS[p.unit]+'</small>'+stockLine(p)+'</div>'+
       (c?'<span class="badge">'+q(c.qty)+'</span>':'')+'<button class="plus">+</button></div>';
   }).join('');
 }
 function addToCart(id){
   var p=DB.products.filter(function(x){return x.id===id})[0];if(!p)return;
   var c=cart.filter(function(x){return x.pid===id})[0];
-  if(c)c.qty=q(c.qty+1);else cart.push({pid:p.id,name:p.name,unit:p.unit,price:p.price,qty:1});
+  if(c)c.qty=q(c.qty+1);else{c={pid:p.id,name:p.name,unit:p.unit,price:p.price,cost:num(p.cost),qty:1};cart.push(c)}
+  if(isTracked(p)&&c.qty>p.stock)toast('⚠️ இருப்பு '+q(p.stock)+' '+UNITS[p.unit]+' மட்டுமே');
   fillPlist();updateBar();
 }
 function cartSub(){return cart.reduce(function(s,i){return s+num(i.qty)*num(i.price)},0)}
@@ -225,7 +268,7 @@ function doCustom(){
   var n=$('#cn').value.trim(),p=num($('#cp').value),qq=num($('#cq').value);
   if(!n){toast('பெயர் எழுதவும்');return}
   if(qq<=0){toast('அளவு சரியில்லை');return}
-  cart.push({pid:null,name:n,unit:$('#cu').value,price:p,qty:qq});
+  cart.push({pid:null,name:n,unit:$('#cu').value,price:p,cost:0,qty:qq});
   closeModal();if(tab==='bill')fillPlist();updateBar();toast('சேர்க்கப்பட்டது');
 }
 function unitOpts(sel){return Object.keys(UNITS).map(function(k){return '<option value="'+k+'"'+(k===sel?' selected':'')+'>'+UNITS[k]+'</option>'}).join('')}
@@ -246,7 +289,8 @@ function openCart(){
    '<div class="tot"><div><span>மொத்தம்</span><span id="tSub"></span></div>'+
    '<div><span>தள்ளுபடி (₹)</span><input class="inp" id="tDisc" type="number" inputmode="decimal" value="'+(cartMeta.disc||'')+'" oninput="cartMeta.disc=num(this.value);calc()"></div>'+
    '<div class="g"><span>கட்டணம்</span><span id="tTot"></span></div></div>'+
-   '<label>வாடிக்கையாளர் பெயர் (விருப்பம்)</label><input class="inp" id="mc" value="'+esc(cartMeta.cust)+'" oninput="cartMeta.cust=this.value">'+
+   '<label>வாடிக்கையாளர் பெயர் (கடன் என்றால் கட்டாயம்)</label><input class="inp" id="mc" list="cl" value="'+esc(cartMeta.cust)+'" oninput="cartMeta.cust=this.value"><datalist id="cl">'+
+     custNames().map(function(n){return '<option value="'+esc(n)+'">'}).join('')+'</datalist>'+
    '<label>தொலைபேசி (விருப்பம்)</label><input class="inp" id="mp" type="tel" value="'+esc(cartMeta.phone)+'" oninput="cartMeta.phone=this.value">'+
    '<label>பணம் செலுத்தும் முறை</label><select class="inp" onchange="cartMeta.pay=this.value">'+
      Object.keys(PAY).map(function(k){return '<option value="'+k+'"'+(k===cartMeta.pay?' selected':'')+'>'+PAY[k]+'</option>'}).join('')+'</select>'+
@@ -270,17 +314,36 @@ async function clearCart(){
   if(await ask('இந்த பில்லில் உள்ள எல்லாவற்றையும் அழிக்கவா?','அழி')){cart=[];editNo=null;editTs=null;resetCartMeta();closeModal();if(tab==='bill')fillPlist();updateBar()}
 }
 function resetCartMeta(){cartMeta={disc:0,cust:'',phone:'',pay:'cash'};editNo=null;editTs=null}
-function saveBill(){
+async function saveBill(){
   var items=cart.filter(function(i){return num(i.qty)>0});
   if(!items.length){toast('அளவு உள்ளிடவும்');return}
+  if(cartMeta.pay==='credit'&&!ckey(cartMeta.cust)){toast('கடன் பில்லுக்கு வாடிக்கையாளர் பெயர் அவசியம்');return}
+  var old=editNo?getBill(editNo):null;
+  var need={};
+  items.forEach(function(i){if(i.pid)need[i.pid]=(need[i.pid]||0)+num(i.qty)});
+  if(old)old.items.forEach(function(i){if(i.pid)need[i.pid]=(need[i.pid]||0)-num(i.qty)});
+  var short=[];
+  Object.keys(need).forEach(function(id){
+    var p=findP(id);
+    if(p&&isTracked(p)&&need[id]>0&&p.stock-need[id]<0)short.push(p.name+' ('+q(p.stock)+' '+UNITS[p.unit]+' மட்டுமே)');
+  });
+  if(short.length&&!(await ask('சரக்கு போதாது: '+short.join(', ')+'. இருந்தாலும் பில் போடவா?','பில் போடு')))return;
   var sub=items.reduce(function(s,i){return s+i.qty*i.price},0),disc=Math.min(num(cartMeta.disc),sub);
-  var b={no:editNo||DB.nextNo,ts:editTs||Date.now(),items:items.map(function(i){return{name:i.name,unit:i.unit,price:num(i.price),qty:num(i.qty)}}),
+  var b={no:editNo||DB.nextNo,ts:editTs||Date.now(),
+    items:items.map(function(i){return{pid:i.pid||null,name:i.name,unit:i.unit,price:num(i.price),cost:num(i.cost),qty:num(i.qty)}}),
     sub:sub,disc:disc,total:sub-disc,cust:cartMeta.cust.trim(),phone:cartMeta.phone.trim(),pay:cartMeta.pay};
+  if(old)old.items.forEach(function(i){adjStock(i.pid,num(i.qty))});
+  b.items.forEach(function(i){adjStock(i.pid,-num(i.qty))});
   if(editNo){DB.bills=DB.bills.map(function(x){return x.no===editNo?b:x})}
   else{DB.bills.push(b);DB.nextNo++}
   save();cart=[];resetCartMeta();closeModal();
-  if(tab==='bill')fillPlist();updateBar();toast('பில் சேமிக்கப்பட்டது');
+  if(tab==='bill')render();updateBar();
   showBill(b.no);
+  var lw=b.items.map(function(i){return i.pid&&findP(i.pid)}).filter(function(p){return p&&isLow(p)});
+  var msg=[];
+  if(b.pay==='credit'){var cc=custMap()[ckey(b.cust)];if(cc)msg.push('📒 '+cc.name+' மொத்த பாக்கி '+money(cc.bal))}
+  if(lw.length)msg.push('⚠️ குறைவு: '+lw.map(function(p){return p.name}).join(', '));
+  toast(msg.length?msg.join('  |  '):'பில் சேமிக்கப்பட்டது');
 }
 
 /* ---------- RECEIPT ---------- */
@@ -323,55 +386,204 @@ function showBill(no){
 function shareBill(no){var b=getBill(no);if(!b)return;if(window.Android)Android.share(billText(b));else{try{navigator.clipboard.writeText(billText(b));toast('நகலெடுக்கப்பட்டது')}catch(e){}}}
 function printBill(no){var b=getBill(no);if(!b)return;$('#printArea').innerHTML=receiptHtml(b);if(window.Android)Android.print();else window.print()}
 async function delBill(no){
-  if(await ask('பில் #'+no+' நிரந்தரமாக நீக்கவா?','நீக்கு')){
+  var ob=getBill(no);
+  if(ob&&await ask('பில் #'+no+' நிரந்தரமாக நீக்கவா? (பொருட்கள் சரக்கில் திரும்பச் சேரும்)','நீக்கு')){
+    ob.items.forEach(function(i){adjStock(i.pid,num(i.qty))});
     DB.bills=DB.bills.filter(function(b){return b.no!==no});save();closeModal();toast('பில் நீக்கப்பட்டது');render();
   }
 }
 async function editBill(no){
   var b=getBill(no);if(!b)return;
   if(cart.length&&!(await ask('தற்போதைய பில்லில் உள்ள பொருட்கள் மாறிவிடும். தொடரவா?','தொடர்')))return;
-  cart=b.items.map(function(i){return{pid:null,name:i.name,unit:i.unit,price:i.price,qty:i.qty}});
+  cart=b.items.map(function(i){return{pid:i.pid||null,name:i.name,unit:i.unit,price:i.price,cost:i.cost||0,qty:i.qty}});
   cartMeta={disc:b.disc,cust:b.cust,phone:b.phone,pay:b.pay};editNo=b.no;editTs=b.ts;
   closeModal();openCart();
 }
 
 /* ---------- PRODUCTS TAB ---------- */
 function rProducts(){
-  $('#main').innerHTML='<input class="inp" id="mq" placeholder="🔍 தேடு" value="'+esc(st.mq)+'">'+
-   '<button class="btn full" onclick="prodForm()">➕ புதிய பொருள்</button><div class="list" id="mlist"></div>';
+  var S=stockStats();
+  $('#main').innerHTML=
+   '<div class="stat"><div class="big"><small>மொத்த சரக்கு மதிப்பு</small><b>'+money(S.costV)+'</b></div>'+
+   '<div><small>விற்றால் வரும்</small><b>'+money(S.saleV)+'</b></div></div>'+
+   '<div class="stat"><div><small>எதிர்பார்க்கும் லாபம்</small><b>'+money(S.saleV-S.costV)+'</b></div>'+
+   '<div class="'+(S.low?'warn':'')+'"><small>குறைவு / தீர்ந்தது</small><b>'+S.low+'</b></div></div>'+
+   '<div class="chips"><button class="chip" data-m="all">எல்லாம் ('+DB.products.length+')</button><button class="chip" data-m="low">⚠️ குறைவு ('+S.low+')</button></div>'+
+   '<input class="inp" id="mq" placeholder="🔍 தேடு" value="'+esc(st.mq)+'">'+
+   '<button class="btn full" onclick="prodForm()">➕ புதிய பொருள்</button><div class="list" id="mlist"></div>'+
+   '<p style="color:var(--mu);font-size:12px">சரக்கு மதிப்பு = இருப்பு × வாங்கிய விலை (வாங்கிய விலை இல்லையென்றால் விற்கும் விலை). இருப்பு கொடுத்த பொருட்கள் மட்டும் கணக்கிடப்படும்.</p>';
+  document.querySelectorAll('.chip[data-m]').forEach(function(c){
+    c.classList.toggle('on',c.dataset.m===st.mf);
+    c.onclick=function(){st.mf=c.dataset.m;rProducts()};
+  });
   $('#mq').oninput=function(){st.mq=this.value;fillMlist()};
   fillMlist();
 }
 function fillMlist(){
   var k=st.mq.trim().toLowerCase();
-  var l=sortedProducts().filter(function(p){return p.name.toLowerCase().indexOf(k)>=0});
+  var l=sortedProducts().filter(function(p){return p.name.toLowerCase().indexOf(k)>=0&&(st.mf!=='low'||isLow(p))});
   $('#mlist').innerHTML=l.length?l.map(function(p){
-    return '<div class="row"><div class="t"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' / '+UNITS[p.unit]+'</small></div>'+
-      '<button class="ico" onclick="prodForm(\''+p.id+'\')">✏️</button><button class="ico" onclick="delProd(\''+p.id+'\')">🗑️</button></div>';
-  }).join(''):'<div class="empty">பொருள் இல்லை. மேலே "புதிய பொருள்" அழுத்தவும்.</div>';
+    return '<div class="row'+(isLow(p)?' lowrow':'')+'"><div class="t"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' / '+UNITS[p.unit]+(num(p.cost)>0?' · வாங்கியது '+money(p.cost):'')+'</small>'+stockLine(p)+'</div>'+
+      '<button class="ico" onclick="stockForm(\''+p.id+'\')">📥</button><button class="ico" onclick="prodForm(\''+p.id+'\')">✏️</button><button class="ico" onclick="delProd(\''+p.id+'\')">🗑️</button></div>';
+  }).join(''):'<div class="empty">'+(st.mf==='low'?'குறைவான பொருள் எதுவும் இல்லை 👍':'பொருள் இல்லை. மேலே "புதிய பொருள்" அழுத்தவும்.')+'</div>';
 }
 function prodForm(id){
-  var p=id?DB.products.filter(function(x){return x.id===id})[0]:{name:'',price:'',unit:'kg'};
+  var p=id?findP(id):{name:'',price:'',unit:'kg',cost:'',min:5};
   modal('<h3>'+(id?'பொருள் திருத்து':'புதிய பொருள்')+'</h3>'+
    '<label>பெயர்</label><input class="inp" id="fn" value="'+esc(p.name)+'">'+
-   '<label>விலை (₹)</label><input class="inp" id="fp" type="number" inputmode="decimal" value="'+esc(p.price)+'">'+
+   '<label>விற்கும் விலை (₹)</label><input class="inp" id="fp" type="number" inputmode="decimal" value="'+esc(p.price)+'">'+
+   '<label>வாங்கிய விலை (₹) — லாபம் கணக்கிட (விருப்பம்)</label><input class="inp" id="fc" type="number" inputmode="decimal" value="'+(num(p.cost)>0?esc(p.cost):'')+'">'+
    '<label>அலகு</label><select class="inp" id="fu">'+unitOpts(p.unit)+'</select>'+
+   '<label>இப்போது இருக்கும் இருப்பு (காலியாக விட்டால் கணக்கிடாது)</label><input class="inp" id="fs" type="number" inputmode="decimal" value="'+(isTracked(p)?esc(p.stock):'')+'">'+
+   '<label>இவ்வளவு அல்லது குறைவானால் எச்சரிக்கை</label><input class="inp" id="fm" type="number" inputmode="decimal" value="'+esc(p.min==null?5:p.min)+'">'+
    '<div class="btns"><button class="btn line" onclick="closeModal()">மூடு</button><button class="btn" onclick="saveProd(\''+(id||'')+'\')">சேமி</button></div>');
 }
 function saveProd(id){
-  var n=$('#fn').value.trim(),pr=num($('#fp').value),u=$('#fu').value;
+  var n=$('#fn').value.trim(),pr=num($('#fp').value),u=$('#fu').value,c=num($('#fc').value);
+  var sv=$('#fs').value.trim(),mv=$('#fm').value.trim();
   if(!n){toast('பெயர் எழுதவும்');return}
-  if(id){DB.products.forEach(function(x){if(x.id===id){x.name=n;x.price=pr;x.unit=u}})}
-  else DB.products.push(mk(n,pr,u));
+  var p=id?findP(id):mk(n,pr,u);
+  p.name=n;p.price=pr;p.unit=u;p.cost=c;
+  if(sv===''){delete p.stock;delete p.min}else{p.stock=num(sv);p.min=mv===''?5:num(mv)}
+  if(!id)DB.products.push(p);
   save();closeModal();render();toast('சேமிக்கப்பட்டது');
 }
+function stockForm(id){
+  var p=findP(id);if(!p)return;
+  modal('<h3>📥 சரக்கு சேர்: '+esc(p.name)+'</h3>'+
+   '<p style="margin:0 0 8px;color:var(--mu)">தற்போதைய இருப்பு: <b>'+(isTracked(p)?q(p.stock)+' '+UNITS[p.unit]:'கணக்கிடவில்லை')+'</b></p>'+
+   '<label>புதிதாக வந்த அளவு ('+UNITS[p.unit]+')</label><input class="inp" id="sq" type="number" inputmode="decimal">'+
+   '<label>வாங்கிய விலை (₹) — மாறியிருந்தால் மட்டும்</label><input class="inp" id="sc" type="number" inputmode="decimal" value="'+(num(p.cost)>0?esc(p.cost):'')+'">'+
+   '<div class="btns"><button class="btn line" onclick="closeModal()">மூடு</button><button class="btn" onclick="doStock(\''+id+'\')">சேர்</button></div>');
+}
+function doStock(id){
+  var p=findP(id),n=num($('#sq').value),c=num($('#sc').value);
+  if(!p)return;
+  if(n<=0){toast('அளவு உள்ளிடவும்');return}
+  if(!isTracked(p)){p.stock=0;p.min=p.min==null?5:p.min}
+  p.stock=q(p.stock+n);
+  if(c>0)p.cost=c;
+  save();closeModal();render();toast('சரக்கு சேர்க்கப்பட்டது');
+}
 async function delProd(id){
-  var p=DB.products.filter(function(x){return x.id===id})[0];
+  var p=findP(id);
   if(p&&await ask('"'+p.name+'" நீக்கவா? (பழைய பில்கள் மாறாது)','நீக்கு')){
     DB.products=DB.products.filter(function(x){return x.id!==id});
     cart=cart.filter(function(c){return c.pid!==id});
     save();render();toast('நீக்கப்பட்டது');
   }
+}
+
+/* ---------- CREDIT (கடன்) ---------- */
+function ckey(n){return String(n||'').trim().toLowerCase().replace(/\s+/g,' ')}
+function ek(k){return encodeURIComponent(k).replace(/'/g,'%27')}
+function custMap(){
+  var m={};
+  function g(n,ph){var k=ckey(n);if(!k)return null;return m[k]||(m[k]={key:k,name:String(n).trim(),phone:ph||'',bal:0,last:0,rows:[]})}
+  DB.bills.forEach(function(b){
+    if(b.pay!=='credit')return;
+    var c=g(b.cust,b.phone);if(!c)return;
+    c.bal+=b.total;c.last=Math.max(c.last,b.ts);if(b.phone)c.phone=b.phone;c.name=String(b.cust).trim();
+    c.rows.push({t:'bill',ts:b.ts,amt:b.total,no:b.no});
+  });
+  (DB.led||[]).forEach(function(e){
+    var c=g(e.name,e.phone);if(!c)return;
+    if(e.kind==='pay')c.bal-=e.amt;else c.bal+=e.amt;
+    c.last=Math.max(c.last,e.ts);if(e.phone&&!c.phone)c.phone=e.phone;
+    c.rows.push({t:e.kind,ts:e.ts,amt:e.amt,id:e.id,note:e.note});
+  });
+  return m;
+}
+function custNames(){
+  var m=custMap(),seen={},out=[];
+  Object.keys(m).forEach(function(k){out.push(m[k].name);seen[k]=1});
+  DB.bills.forEach(function(b){var k=ckey(b.cust);if(k&&!seen[k]){seen[k]=1;out.push(b.cust.trim())}});
+  return out.sort();
+}
+function rCredit(){
+  var m=custMap(),arr=Object.keys(m).map(function(k){return m[k]});
+  var owing=arr.filter(function(c){return c.bal>0.005});
+  var tot=owing.reduce(function(s,c){return s+c.bal},0);
+  $('#main').innerHTML=
+   '<div class="stat"><div class="big"><small>மொத்த கடன் பாக்கி</small><b>'+money(tot)+'</b></div><div><small>பாக்கி உள்ளவர்கள்</small><b>'+owing.length+'</b></div></div>'+
+   '<div class="chips"><button class="chip" data-c="owe">பாக்கி உள்ளவர்கள்</button><button class="chip" data-c="all">எல்லோரும்</button></div>'+
+   '<input class="inp" id="cq" placeholder="🔍 பெயர் / போன்" value="'+esc(st.cq)+'">'+
+   '<button class="btn ghost full" onclick="oldForm()">➕ பழைய கடன் / புதிய நபர் சேர்</button><div class="list" id="clist"></div>'+
+   '<p style="color:var(--mu);font-size:12px">"பில்" பகுதியில் பணம் செலுத்தும் முறையை <b>கடன்</b> என்று தேர்ந்தெடுத்து பில் போட்டால் இங்கே அவர் பெயரில் சேரும். பணம் வாங்கினால் அவர் பெயரைத் தொட்டு "பணம் பெற்றேன்" அழுத்தவும்.</p>';
+  document.querySelectorAll('.chip[data-c]').forEach(function(c){
+    c.classList.toggle('on',c.dataset.c===st.cf);
+    c.onclick=function(){st.cf=c.dataset.c;rCredit()};
+  });
+  $('#cq').oninput=function(){st.cq=this.value;fillClist()};
+  fillClist();
+}
+function fillClist(){
+  var m=custMap(),k=st.cq.trim().toLowerCase();
+  var l=Object.keys(m).map(function(x){return m[x]}).filter(function(c){
+    if(st.cf==='owe'&&c.bal<=0.005)return false;
+    return !k||(c.name.toLowerCase().indexOf(k)>=0||(c.phone||'').indexOf(k)>=0);
+  }).sort(function(a,b){return b.bal-a.bal});
+  $('#clist').innerHTML=l.length?l.map(function(c){
+    var a=c.bal>0.005?'<span class="amt lowt">'+money(c.bal)+'</span>':(c.bal<-0.005?'<span class="amt okt">முன்பணம் '+money(-c.bal)+'</span>':'<span class="amt okt">✔ தீர்ந்தது</span>');
+    return '<div class="row" onclick="custView(decodeURIComponent(\''+ek(c.key)+'\'))"><div class="t"><b>'+esc(c.name)+'</b><small>'+(c.phone?esc(c.phone)+' · ':'')+'கடைசி: '+dstr(c.last)+'</small></div>'+a+'</div>';
+  }).join(''):'<div class="empty">'+(st.cf==='owe'?'யாருக்கும் பாக்கி இல்லை 👍':'யாரும் இல்லை.')+'</div>';
+}
+function custView(key){
+  var c=custMap()[key];if(!c){closeModal();render();return}
+  var rows=c.rows.slice().sort(function(a,b){return b.ts-a.ts}).map(function(r){
+    var d=dstr(r.ts);
+    if(r.t==='bill')return '<div class="row" onclick="showBill('+r.no+')"><div class="t"><b>பில் #'+r.no+'</b><small>'+d+' · கடன்</small></div><span class="amt lowt">+ '+money(r.amt)+'</span></div>';
+    var lbl=r.t==='pay'?'பணம் பெற்றது':'பழைய கடன்';
+    return '<div class="row"><div class="t"><b>'+lbl+'</b><small>'+d+(r.note?' · '+esc(r.note):'')+'</small></div><span class="amt '+(r.t==='pay'?'okt':'lowt')+'">'+(r.t==='pay'?'− ':'+ ')+money(r.amt)+'</span>'+
+      '<button class="ico" onclick="delLed(\''+r.id+'\',decodeURIComponent(\''+ek(key)+'\'))">🗑️</button></div>';
+  }).join('');
+  modal('<h3>'+esc(c.name)+'</h3>'+(c.phone?'<div style="color:var(--mu);margin:-6px 0 8px">📞 '+esc(c.phone)+'</div>':'')+
+   '<div class="tot"><div class="g" style="border:0;margin:0;padding:0"><span>'+(c.bal<-0.005?'முன்பணம்':'பாக்கி')+'</span><span style="color:'+(c.bal>0.005?'#ff8a80':'var(--y)')+'">'+money(Math.abs(c.bal))+'</span></div></div>'+
+   '<div class="btns"><button class="btn" onclick="payForm(decodeURIComponent(\''+ek(key)+'\'))">💰 பணம் பெற்றேன்</button><button class="btn ghost" onclick="remind(decodeURIComponent(\''+ek(key)+'\'))">📤 நினைவூட்டு</button></div>'+
+   '<div class="btns"><button class="btn line" onclick="oldForm(decodeURIComponent(\''+ek(key)+'\'))">➕ கடன் சேர்</button><button class="btn line" onclick="closeModal()">மூடு</button></div>'+
+   '<h4>கணக்கு விவரம்</h4><div class="list">'+(rows||'<div class="empty">பதிவு இல்லை.</div>')+'</div>');
+}
+function payForm(key){
+  var c=custMap()[key];if(!c)return;
+  modal('<h3>💰 பணம் பெற்றது: '+esc(c.name)+'</h3>'+
+   '<p style="margin:0 0 8px;color:var(--mu)">தற்போதைய பாக்கி: <b>'+money(c.bal)+'</b></p>'+
+   '<label>வாங்கிய தொகை (₹)</label><input class="inp" id="pa" type="number" inputmode="decimal" value="'+(c.bal>0?q(c.bal):'')+'">'+
+   '<label>குறிப்பு (விருப்பம்)</label><input class="inp" id="pn" placeholder="GPay / ரொக்கம்">'+
+   '<div class="btns"><button class="btn line" onclick="custView(decodeURIComponent(\''+ek(key)+'\'))">பின்</button><button class="btn" onclick="doPay(decodeURIComponent(\''+ek(key)+'\'))">சேமி</button></div>');
+}
+function doPay(key){
+  var c=custMap()[key],a=num($('#pa').value);
+  if(!c)return;
+  if(a<=0){toast('தொகை உள்ளிடவும்');return}
+  DB.led.push({id:uid(),name:c.name,phone:c.phone,kind:'pay',amt:a,ts:Date.now(),note:$('#pn').value.trim()});
+  save();toast('பணம் பதிவு செய்யப்பட்டது');custView(key);if(tab==='credit')rCredit();
+}
+function oldForm(key){
+  var c=key?custMap()[key]:null;
+  modal('<h3>➕ கடன் சேர்</h3>'+
+   '<label>பெயர்</label><input class="inp" id="on" list="cl2" value="'+(c?esc(c.name):'')+'"'+(c?' readonly':'')+'><datalist id="cl2">'+custNames().map(function(n){return '<option value="'+esc(n)+'">'}).join('')+'</datalist>'+
+   '<label>தொலைபேசி (விருப்பம்)</label><input class="inp" id="op" type="tel" value="'+(c?esc(c.phone):'')+'">'+
+   '<label>கடன் தொகை (₹)</label><input class="inp" id="oa" type="number" inputmode="decimal">'+
+   '<label>குறிப்பு (விருப்பம்)</label><input class="inp" id="ot" placeholder="பழைய பாக்கி">'+
+   '<div class="btns"><button class="btn line" onclick="'+(c?'custView(decodeURIComponent(\''+ek(key)+'\'))':'closeModal()')+'">பின்</button><button class="btn" onclick="doOld()">சேமி</button></div>');
+}
+function doOld(){
+  var n=$('#on').value.trim(),a=num($('#oa').value);
+  if(!n){toast('பெயர் எழுதவும்');return}
+  if(a<=0){toast('தொகை உள்ளிடவும்');return}
+  var ex=custMap()[ckey(n)];
+  DB.led.push({id:uid(),name:ex?ex.name:n,phone:$('#op').value.trim(),kind:'old',amt:a,ts:Date.now(),note:$('#ot').value.trim()});
+  save();toast('கடன் சேர்க்கப்பட்டது');custView(ckey(n));if(tab==='credit')rCredit();
+}
+async function delLed(id,key){
+  if(await ask('இந்த பதிவை நீக்கவா?','நீக்கு')){
+    DB.led=DB.led.filter(function(e){return e.id!==id});save();custView(key);if(tab==='credit')rCredit();
+  }
+}
+function remind(key){
+  var c=custMap()[key];if(!c)return;
+  var t='வணக்கம் '+c.name+', '+DB.shop.name+' கடையில் உங்கள் கடன் பாக்கி '+money(c.bal)+'. வசதிப்படும்போது செலுத்தவும். நன்றி!';
+  if(window.Android)Android.share(t);else{try{navigator.clipboard.writeText(t);toast('நகலெடுக்கப்பட்டது')}catch(e){}}
 }
 
 /* ---------- HISTORY TAB ---------- */
@@ -415,7 +627,12 @@ function rReport(){
     return true;
   });
   var tot=l.reduce(function(s,b){return s+b.total},0),disc=l.reduce(function(s,b){return s+b.disc},0);
-  var by={cash:0,upi:0,credit:0},items={};
+  var by={cash:0,upi:0,credit:0},items={},profit=0,hasCost=false;
+  l.forEach(function(b){
+    var bc=false;b.items.forEach(function(i){if(num(i.cost)>0){bc=true;hasCost=true;profit+=i.qty*(i.price-i.cost)}});
+    if(bc)profit-=num(b.disc);
+  });
+  var S=stockStats();
   l.forEach(function(b){by[b.pay]=(by[b.pay]||0)+b.total;b.items.forEach(function(i){var o=items[i.name]||(items[i.name]={amt:0,qty:0,unit:i.unit});o.amt+=i.qty*i.price;o.qty+=i.qty})});
   var top=Object.keys(items).map(function(n){return{n:n,amt:items[n].amt,qty:items[n].qty,unit:items[n].unit}}).sort(function(a,b){return b.amt-a.amt}).slice(0,10);
   $('#main').innerHTML=
@@ -423,6 +640,8 @@ function rReport(){
    '<div class="stat"><div class="big"><small>மொத்த விற்பனை</small><b>'+money(tot)+'</b></div><div><small>பில்கள்</small><b>'+l.length+'</b></div></div>'+
    '<div class="stat"><div><small>ரொக்கம்</small><b>'+money(by.cash)+'</b></div><div><small>UPI</small><b>'+money(by.upi)+'</b></div><div><small>கடன்</small><b>'+money(by.credit)+'</b></div></div>'+
    (disc>0?'<div class="stat"><div><small>மொத்த தள்ளுபடி</small><b>'+money(disc)+'</b></div></div>':'')+
+   (hasCost?'<div class="stat"><div><small>மதிப்பிட்ட லாபம் (வாங்கிய விலை உள்ள பொருட்கள்)</small><b>'+money(profit)+'</b></div></div>':'')+
+   '<h4>இப்போதைய நிலை</h4><div class="stat" onclick="go(\'credit\')"><div class="big"><small>மொத்த கடன் பாக்கி</small><b>'+money(credTot())+'</b></div></div><div class="stat" onclick="go(\'products\')"><div class="big"><small>சரக்கு மதிப்பு</small><b>'+money(S.costV)+'</b></div><div class="'+(S.low?'warn':'')+'"><small>குறைவு / தீர்ந்தது</small><b>'+S.low+'</b></div></div>'+
    '<h4>அதிகம் விற்ற பொருட்கள்</h4><div class="list">'+(top.length?top.map(function(t){
      return '<div class="row"><div class="t"><b>'+esc(t.n)+'</b><small>'+q(t.qty)+' '+UNITS[t.unit]+'</small></div><span class="amt">'+money(t.amt)+'</span></div>';
    }).join(''):'<div class="empty">தகவல் இல்லை.</div>')+'</div>';
@@ -466,7 +685,7 @@ async function doRestore(){
     var d=JSON.parse($('#rt').value.trim());
     if(!d||!Array.isArray(d.products)||!Array.isArray(d.bills)||!d.shop)throw 0;
     if(!(await ask('தற்போதைய தகவல் அழிந்து பேக்கப் தகவல் வரும். தொடரவா?','மீட்டெடு')))return;
-    DB=d;if(!DB.nextNo)DB.nextNo=DB.bills.reduce(function(m,b){return Math.max(m,b.no)},0)+1;
+    DB=d;if(!DB.led)DB.led=[];if(!DB.nextNo)DB.nextNo=DB.bills.reduce(function(m,b){return Math.max(m,b.no)},0)+1;
     save();cart=[];resetCartMeta();closeModal();render();toast('மீட்டெடுக்கப்பட்டது');
   }catch(e){toast('பேக்கப் எழுத்து சரியில்லை')}
 }
