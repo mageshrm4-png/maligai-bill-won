@@ -439,7 +439,7 @@ async function saveBill(){
   if(b.pay==='credit'){var cc=custMap()[ckey(b.cust)];if(cc)msg.push('📒 '+cc.name+' மொத்த பாக்கி '+money(cc.bal))}
   if(lw.length)msg.push('⚠️ குறைவு: '+lw.map(function(p){return p.name}).join(', '));
   if(b.phone&&!cleanPhone(b.phone))msg.push('📵 போன் எண் சரியில்லை');
-  else if(autoBillSms(b))msg.push('📱 SMS அனுப்பப்பட்டது');
+  else if(autoBillSms(b))msg.push('📱 SMS தயார் — Send அழுத்துங்க');
   toast(msg.length?msg.join('  |  '):'பில் சேமிக்கப்பட்டது');
 }
 
@@ -684,7 +684,7 @@ function doPay(key){
   DB.led.push({id:uid(),name:c.name,phone:c.phone,kind:'pay',amt:a,ts:Date.now(),note:$('#pn').value.trim()});
   save();custView(key);if(tab==='credit')rCredit();
   var c2=custMap()[key],ph=cleanPhone(c2&&c2.phone);
-  if(ph&&smsMode()!=='off'){sendSms(ph,DB.shop.name+'\nநன்றி! '+money(a)+' பணம் பெற்றோம்.\nமீதி கடன் பாக்கி: '+money(c2.bal));toast('பணம் பதிவு · 📱 SMS அனுப்பப்பட்டது')}
+  if(ph&&smsMode()!=='off'){sendSms(ph,DB.shop.name+'\nநன்றி! '+money(a)+' பணம் பெற்றோம்.\nமீதி கடன் பாக்கி: '+money(c2.bal));toast('பணம் பதிவு · 📱 SMS தயார் — Send அழுத்துங்க')}
   else toast('பணம் பதிவு செய்யப்பட்டது');
 }
 function oldForm(key){
