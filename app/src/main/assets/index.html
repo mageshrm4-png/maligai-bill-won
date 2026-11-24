@@ -508,7 +508,7 @@ function rProducts(){
    '<div class="'+(S.low?'warn':'')+'"><small>குறைவு / தீர்ந்தது</small><b>'+S.low+'</b></div></div>'+
    '<div class="chips"><button class="chip" data-m="all">எல்லாம் ('+DB.products.length+')</button><button class="chip" data-m="low">⚠️ குறைவு ('+S.low+')</button></div>'+
    '<input class="inp" id="mq" placeholder="🔍 தேடு" value="'+esc(st.mq)+'">'+
-   '<button class="btn full" onclick="prodForm()">➕ புதிய பொருள்</button><div class="list" id="mlist"></div>'+
+   '<button class="btn full" onclick="prodForm()">➕ புதிய பொருள்</button><button class="btn ghost full" onclick="importForm()">📋 பட்டியலாகச் சேர் (பல பொருட்கள்)</button><div class="list" id="mlist"></div>'+
    '<p style="color:var(--mu);font-size:12px">சரக்கு மதிப்பு = இருப்பு × வாங்கிய விலை (வாங்கிய விலை இல்லையென்றால் விற்கும் விலை). இருப்பு கொடுத்த பொருட்கள் மட்டும் கணக்கிடப்படும்.</p>';
   document.querySelectorAll('.chip[data-m]').forEach(function(c){
     c.classList.toggle('on',c.dataset.m===st.mf);
@@ -521,7 +521,7 @@ function fillMlist(){
   var k=st.mq.trim().toLowerCase();
   var l=sortedProducts().filter(function(p){return p.name.toLowerCase().indexOf(k)>=0&&(st.mf!=='low'||isLow(p))});
   $('#mlist').innerHTML=l.length?l.map(function(p){
-    return '<div class="row'+(isLow(p)?' lowrow':'')+'"><div class="t"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' / '+UNITS[p.unit]+(num(p.cost)>0?' · வாங்கியது '+money(p.cost):'')+'</small>'+stockLine(p)+'</div>'+
+    return '<div class="row'+(isLow(p)?' lowrow':'')+'"><div class="t"><b>'+esc(p.name)+'</b><small>'+money(p.price)+' / '+UNITS[p.unit]+(num(p.cost)>0?' · வாங்கியது '+money(p.cost)+' · லாபம் '+money(p.price-p.cost)+' / '+UNITS[p.unit]:'')+'</small>'+stockLine(p)+'</div>'+
       '<button class="ico" onclick="stockForm(\''+p.id+'\')">📥</button><button class="ico" onclick="prodForm(\''+p.id+'\')">✏️</button><button class="ico" onclick="delProd(\''+p.id+'\')">🗑️</button></div>';
   }).join(''):'<div class="empty">'+(st.mf==='low'?'குறைவான பொருள் எதுவும் இல்லை 👍':'பொருள் இல்லை. மேலே "புதிய பொருள்" அழுத்தவும்.')+'</div>';
 }
@@ -545,6 +545,32 @@ function saveProd(id){
   if(sv===''){delete p.stock;delete p.min}else{p.stock=num(sv);p.min=mv===''?5:num(mv)}
   if(!id)DB.products.push(p);
   save();closeModal();render();toast('சேமிக்கப்பட்டது');
+}
+function unitOf(s){
+  s=String(s||'').trim().toLowerCase();
+  var m={kg:'kg','கிலோ':'kg',l:'L',litre:'L',liter:'L','லிட்டர்':'L',pcs:'pcs',pc:'pcs','எண்':'pcs',pkt:'pkt',packet:'pkt','பாக்கெட்':'pkt',dz:'dz',dozen:'dz','டஜன்':'dz'};
+  return m[s]||'pcs';
+}
+function importForm(){
+  modal('<h3>📋 பல பொருட்கள் ஒரே நேரத்தில்</h3>'+
+   '<p style="margin:0 0 8px;color:var(--mu);font-size:14px">ஒவ்வொரு வரியும் ஒரு பொருள்:<br><b>பெயர், விலை, அலகு, வாங்கிய விலை, இருப்பு</b><br>அலகு: kg / L / pcs / pkt / dz (விட்டால் pcs). கடைசி மூன்றும் விருப்பம்.<br>உதாரணம்:<br>Arisi, 80, kg, 70, 25<br>Arasan soap, 36, pcs</p>'+
+   '<textarea class="inp" id="itx" rows="9" placeholder="Arisi, 80, kg"></textarea>'+
+   '<div class="btns"><button class="btn line" onclick="closeModal()">மூடு</button><button class="btn" onclick="doImport()">சேர்</button></div>');
+}
+function doImport(){
+  var add=0,upd=0,bad=0;
+  $('#itx').value.split(/\n/).forEach(function(L){
+    L=L.trim();if(!L)return;
+    var f=L.split(/[,\t]/).map(function(x){return x.trim()});
+    var name=f[0],price=parseFloat(f[1]);
+    if(!name||isNaN(price)){bad++;return}
+    var u=unitOf(f[2]),cost=(f[3]!==undefined&&f[3]!=='')?num(f[3]):0,sv=(f[4]!==undefined&&f[4]!=='')?num(f[4]):undefined;
+    var ex=DB.products.filter(function(p){return p.name.toLowerCase()===name.toLowerCase()})[0];
+    if(ex){ex.price=price;ex.unit=u;if(cost)ex.cost=cost;if(sv!==undefined){ex.stock=sv;if(ex.min==null)ex.min=5}upd++}
+    else{DB.products.push(mk(name,price,u,cost,sv,5));add++}
+  });
+  save();closeModal();render();
+  toast(add+' சேர்க்கப்பட்டது, '+upd+' புதுப்பிக்கப்பட்டது'+(bad?', '+bad+' வரி தவறு':''));
 }
 function stockForm(id){
   var p=findP(id);if(!p)return;
@@ -806,7 +832,7 @@ async function doRestore(){
     var d=JSON.parse($('#rt').value.trim());
     if(!d||!Array.isArray(d.products)||!Array.isArray(d.bills)||!d.shop)throw 0;
     if(!(await ask('தற்போதைய தகவல் அழிந்து பேக்கப் தகவல் வரும். தொடரவா?','மீட்டெடு')))return;
-    DB=d;if(!DB.led)DB.led=[];if(!DB.phones)DB.phones={};if(!DB.nextNo)DB.nextNo=DB.bills.reduce(function(m,b){return Math.max(m,b.no)},0)+1;
+    DB=d;if(!DB.led)DB.led=[];if(!DB.phones)DB.phones={};DB.setup=true;if(!DB.nextNo)DB.nextNo=DB.bills.reduce(function(m,b){return Math.max(m,b.no)},0)+1;
     save();cart=[];resetCartMeta();closeModal();render();toast('மீட்டெடுக்கப்பட்டது');
   }catch(e){toast('பேக்கப் எழுத்து சரியில்லை')}
 }
