@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1B5E3F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Maligai Kadai</title>
+<style>
+:root{--g:#1B5E3F;--g2:#2E7D4F;--gl:#E6F2EA;--bg:#F4F7F5;--tx:#1e2b25;--mu:#5d6c64;--ln:#d5ddd8;--red:#c0392b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:78px}
+header{position:sticky;top:0;z-index:5;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;padding-top:calc(12px + env(safe-area-inset-top))}
+h1{font-size:18px;margin:0}
+#menuBtn{background:none;border:0;color:#fff;font-size:26px;padding:0 6px;line-height:1}
+main{padding:12px;max-width:640px;margin:0 auto}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--ln);display:flex;z-index:5;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;background:none;border:0;padding:6px 0 7px;font-size:10px;color:var(--mu);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:20px}
+nav button.on{color:var(--g);font-weight:700}
+.card{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:15px}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
+input,select,textarea{width:100%;font-size:16px;padding:10px;border:1px solid var(--ln);border-radius:8px;background:#fff;font-family:inherit;color:var(--tx)}
+.btn{background:var(--g2);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-size:16px;font-weight:600;width:100%;margin-top:12px}
+.btn.ghost{background:#fff;color:var(--g);border:1px solid var(--g2)}
+.btn.sm{width:auto;padding:6px 12px;font-size:13px;margin:0}
+.btn.red{background:var(--red)}
+.chips{display:flex;gap:8px}
+.chip{flex:1;text-align:center;padding:10px 0;border:1px solid var(--ln);border-radius:20px;background:#fff;font-size:14px}
+.chip.on{background:var(--g2);color:#fff;border-color:var(--g2)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi{border-radius:12px;padding:10px;border-top:3px solid var(--g2)}
+.kpi small{display:block;font-size:10px;font-weight:700;color:var(--mu);letter-spacing:.3px}
+.kpi b{font-size:20px}
+.li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef1ef}
+.li .m{flex:1;min-width:0}
+.li .m div:first-child{font-weight:600;font-size:14px}
+.li .m div+div{font-size:12px;color:var(--mu)}
+.li .a{text-align:right;font-weight:700;font-size:14px}
+.li .a small{display:block;font-weight:400;font-size:11px;color:var(--mu)}
+.x{background:none;border:0;color:#a33;font-size:18px;padding:4px 8px}
+.badge{display:inline-block;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;border:0}
+.b-ok{background:#dff1e5;color:#1b7a3e}.b-low,.b-part,.b-cred{background:#ffe7b0;color:#7a4a00}
+.b-out,.b-pend{background:#f8c9c4;color:#8b1a10}
+.dh{font-size:12px;font-weight:700;color:var(--mu);margin:12px 0 2px;display:flex;justify-content:space-between}
+.hb .r{display:flex;align-items:center;gap:8px;font-size:12px;margin:5px 0}
+.hb .r i{flex:0 0 96px;font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb .bar{flex:1;background:#f3e6d3;border-radius:4px;height:14px}
+.hb .bar b{display:block;height:100%;background:#e08a2e;border-radius:4px}
+.hb .r span{flex:0 0 64px;text-align:right}
+.empty{color:var(--mu);text-align:center;padding:16px;font-size:14px}
+.tot{background:var(--gl);border-radius:8px;padding:8px 10px;margin-top:10px;font-size:14px;display:flex;justify-content:space-between}
+.legend{font-size:11px;color:var(--mu);display:flex;gap:12px;justify-content:center;margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+#sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;z-index:20}
+#sheet.open{display:flex}
+.sh{background:#fff;width:100%;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px;max-width:640px;margin:0 auto}
+.sh h3{margin:0 0 4px}
+.sh .row{display:flex;gap:10px}
+#toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:30;opacity:0;transition:.2s;pointer-events:none;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+.note{font-size:12px;color:var(--mu);margin:6px 0 0}
+.res{display:flex;width:100%;align-items:center;gap:8px;text-align:left;background:#fff;border:1px solid var(--ln);border-radius:10px;padding:10px 12px;margin:5px 0;font-size:15px;color:var(--tx);font-family:inherit}
+.res span{flex:1;font-weight:600}.res small{color:var(--mu);font-size:11px}.res i{font-style:normal;color:var(--g2);font-size:20px;font-weight:700}
+.cl{display:grid;grid-template-columns:1fr auto auto auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #eef1ef}
+.cl .m b{font-size:14px;display:block}
+.cl .rt{font-size:11px;color:var(--mu);display:flex;align-items:center;gap:3px;margin-top:2px}
+.cl .rt input{width:66px;padding:3px 5px;font-size:12px}
+.qs{display:flex;align-items:center;gap:3px}
+.qs button{width:32px;height:32px;border-radius:8px;border:1px solid var(--ln);background:#fff;font-size:18px;color:var(--g);padding:0}
+.qs input{width:52px;text-align:center;padding:6px 2px}
+.la{font-weight:700;font-size:14px;min-width:60px;text-align:right}
+.pay{border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
+.pay b{font-size:19px}
+.p-ok{background:#dff1e5;color:#17653a}.p-chg{background:#e0ecfa;color:#1d4f91}.p-due{background:#ffe7b0;color:#7a4a00}.p-hint{background:#f1f4f3;color:var(--mu)}
+.rowf{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rcpt{font-family:'Courier New',monospace;font-size:13px;border:1px dashed #999;padding:12px;border-radius:8px;background:#fff;color:#000}
+.rcpt .rc-h{text-align:center;margin-bottom:6px}.rcpt .rc-h b{font-size:16px}
+.rcpt .rc-m{display:flex;justify-content:space-between;font-size:12px;margin:4px 0}
+.rcpt table{width:100%;border-collapse:collapse;margin:6px 0}
+.rcpt th{text-align:left;border-bottom:1px dashed #666;font-size:12px;padding:3px 0}
+.rcpt td{padding:3px 0;vertical-align:top;font-size:12px}
+.rcpt .r{text-align:right}
+.rcpt .t{display:flex;justify-content:space-between;padding:2px 0}
+.rcpt .t.big{font-weight:700;font-size:15px;border-top:1px dashed #666;margin-top:4px;padding-top:5px}
+.rcpt .ft{text-align:center;margin-top:8px;font-size:12px}
+@media print{body{background:#fff;padding:0}header,main,nav,#toast,.sh .row{display:none!important}#sheet{position:static;display:block!important;background:none}.sh{max-height:none;overflow:visible;padding:0;border-radius:0}.rcpt{border:0}}
+</style>
+</head>
+<body>
+<header><h1 id="title">Maligai Kadai</h1><button id="menuBtn" data-act="more" aria-label="More">⋮</button></header>
+<main id="view"></main>
+<nav id="nav"></nav>
+<div id="sheet"></div>
+<div id="toast"></div>
+<input type="file" id="restoreFile" accept=".json,application/json" hidden>
+
+<script>
+/* ============ basics ============ */
+const KEY = 'maligai_kadai_v1';
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DEFAULT_CATS = ['Transport','Electricity','Tea & Snacks','Rent','Salary / Wages','Packing Material','Phone & Internet','Repairs','Water','Cleaning','Licence & Taxes','Other'];
+const $ = id => document.getElementById(id);
+const sum = (a, f) => a.reduce((t, x) => t + f(x), 0);
+const pad = n => String(n).padStart(2, '0');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const fmtDate = d => { const p = d.split('-'); return p[2] + '-' + MON[+p[1] - 1] + '-' + p[0]; };
+const num = x => +(+x).toFixed(3);
+const inr = n => (n < 0 ? '-' : '') + '₹' + Math.abs(Math.round(n * 100) / 100).toLocaleString('en-IN', {maximumFractionDigits: 2});
+const inr0 = n => (n < 0 ? '-' : '') + '₹' + Math.abs(Math.round(n)).toLocaleString('en-IN');
+const blank = () => ({items: [], sales: [], purchases: [], expenses: [], credit: [], cats: DEFAULT_CATS.slice(), bills: [], requests: [], billNo: 0,
+  settings: {shop: 'Maligai Kadai', phone: '', addr: '', foot: 'Thank you! Please visit again.', lastBackup: ''}});
+function fix(d) { const b = blank(); for (const k of Object.keys(b)) if (d[k] == null) d[k] = b[k]; d.settings = Object.assign({}, b.settings, d.settings); return d; }
+const r2 = x => Math.round(x * 100) / 100, r3 = x => Math.round(x * 1000) / 1000, pad4 = n => String(n).padStart(4, '0');
+const nowTime = () => { const d = new Date(); let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + pad(d.getMinutes()) + ' ' + ap; };
+
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.items)) return fix(d); } catch (e) {}
+  return blank();
+}
+let db = load();
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { toast('Could not save – phone storage is full'); }
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+
+const S = {tab: 'home', month: today().slice(0, 7), filter: 'due', bmode: 'Cash', pstat: 'Paid',
+           pDate: today(), eDate: today(), cart: [], q: '', cust: '', recv: ''};
+
+/* ============ calculations ============ */
+function stockOf(it) {
+  const bought = sum(db.purchases.filter(p => p.item === it.name), p => p.qty);
+  const sold = sum(db.sales.filter(s => s.item === it.name), s => s.qty);
+  const close = it.open + bought - sold;
+  const status = close <= 0 ? 'OUT' : close <= it.min ? 'LOW' : 'OK';
+  return {bought, sold, close, status, value: close * it.pp};
+}
+const balance = c => c.amt - c.paid;
+const credStatus = c => balance(c) <= 0.0001 ? 'Paid' : c.paid > 0 ? 'Partly Paid' : 'Pending';
+function summary(m) {
+  const ms = db.sales.filter(s => s.date.startsWith(m));
+  const tot = sum(ms, s => s.qty * s.price);
+  const gp = sum(ms, s => s.qty * (s.price - s.cost));
+  const legacy = ms.filter(s => !s.billId), bs = db.bills.filter(b => b.date.startsWith(m));
+  const mode = k => sum(legacy.filter(s => s.mode === k), s => s.qty * s.price);
+  const bm = {cash: sum(bs, b => b.cash), upi: sum(bs, b => b.upi), cred: sum(bs, b => b.credit)};
+  const pur = sum(db.purchases.filter(p => p.date.startsWith(m)), p => p.qty * p.price);
+  const exp = sum(db.expenses.filter(e => e.date.startsWith(m)), e => e.amt);
+  const out = sum(db.credit, balance);
+  const low = db.items.map(i => ({i, s: stockOf(i)})).filter(x => x.s.status !== 'OK');
+  return {tot, gp, cash: mode('Cash') + bm.cash, upi: mode('UPI') + bm.upi, cred: mode('Credit') + bm.cred, pur, exp, net: gp - exp, out, low};
+}
+
+/* ============ small UI helpers ============ */
+let toastT;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+function sheet(title, html, onOk, okText) {
+  $('sheet').innerHTML = '<div class="sh"><h3>' + title + '</h3>' + html +
+    '<div class="row"><button class="btn ghost" data-act="close">Cancel</button><button class="btn" id="shOk">' + (okText || 'Save') + '</button></div></div>';
+  $('sheet').classList.add('open');
+  $('shOk').onclick = () => { if (onOk() !== false) closeSheet(); };
+}
+function closeSheet() { $('sheet').classList.remove('open'); $('sheet').innerHTML = ''; }
+const chips = (act, opts, cur) => '<div class="chips">' + opts.map(o => '<div class="chip' + (o === cur ? ' on' : '') + '" data-act="' + act + '" data-v="' + o + '">' + o + '</div>').join('') + '</div>';
+const opts = (arr, sel) => arr.map(x => '<option' + (x === sel ? ' selected' : '') + '>' + esc(x) + '</option>').join('');
+const groupByDate = arr => { const m = new Map(); arr.forEach(x => { if (!m.has(x.date)) m.set(x.date, []); m.get(x.date).push(x); }); return [...m.entries()]; };
+const newestFirst = arr => arr.slice().reverse().sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+
+/* ============ charts (plain SVG, no internet needed) ============ */
+function niceStep(x) { if (!(x > 0)) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * p; }
+function short(n) { const a = Math.abs(n), s = n < 0 ? '-' : ''; return a >= 1e5 ? s + +(a / 1e5).toFixed(1) + 'L' : a >= 1e3 ? s + +(a / 1e3).toFixed(1) + 'k' : s + a; }
+function vchart(labels, series) {
+  const all = series.flatMap(s => s.values);
+  if (!all.some(v => v !== 0)) return '<div class="empty">No data for this period yet</div>';
+  const W = 340, H = 170, pl = 36, pr = 6, pt = 8, pb = 20;
+  let mx = Math.max(0, ...all), mn = Math.min(0, ...all);
+  const step = niceStep((mx - mn) / 4);
+  mx = Math.ceil(mx / step - 1e-9) * step; mn = Math.floor(mn / step + 1e-9) * step;
+  const iw = W - pl - pr, ih = H - pt - pb, y = v => pt + ih * (1 - (v - mn) / (mx - mn));
+  let g = '';
+  const ticks = Math.round((mx - mn) / step);
+  for (let k = 0; k <= ticks; k++) {
+    const t = mn + k * step;
+    g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y(t) + '" y2="' + y(t) + '" stroke="' + (t === 0 ? '#9aa8a0' : '#e3e8e5') + '"/>' +
+         '<text x="' + (pl - 4) + '" y="' + (y(t) + 3) + '" text-anchor="end" font-size="8" fill="#667">' + short(t) + '</text>';
+  }
+  const n = labels.length, gw = iw / n, bw = gw * 0.8 / series.length;
+  series.forEach((s, si) => s.values.forEach((v, i) => {
+    const x = pl + i * gw + gw * 0.1 + si * bw, y0 = y(0), y1 = y(v);
+    if (v !== 0) g += '<rect x="' + x.toFixed(1) + '" y="' + Math.min(y0, y1).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.abs(y1 - y0).toFixed(1) + '" fill="' + s.color + '" rx="1"/>';
+  }));
+  const every = n > 16 ? 3 : n > 12 ? 2 : 1;
+  labels.forEach((l, i) => { if (i % every === 0) g += '<text x="' + (pl + i * gw + gw / 2).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="8" fill="#667">' + l + '</text>'; });
+  const legend = series.length > 1 ? '<div class="legend">' + series.map(s => '<span><i style="background:' + s.color + '"></i>' + s.name + '</span>').join('') + '</div>' : '';
+  return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img">' + g + '</svg>' + legend;
+}
+
+/* ============ views ============ */
+function homeAlerts() {
+  let h = '';
+  const nreq = db.requests.filter(r => !r.done).length;
+  const has = db.sales.length || db.bills.length || db.purchases.length;
+  const last = db.settings.lastBackup, days = last ? Math.floor((new Date(today()) - new Date(last)) / 864e5) : 999;
+  if (has && days >= 7) h += '<div class="card" style="border-color:#e0b34f;background:#fff8e6"><b>⚠ Backup reminder</b><div class="note">' + (last ? 'Your last backup was ' + days + ' days ago.' : 'You have not taken a backup yet.') + '</div><button class="btn sm" style="margin-top:8px" data-act="tab" data-v="more">Backup now</button></div>';
+  if (nreq) h += '<div class="card" style="background:#eef5ff"><b>📝 Customers asked for ' + nreq + ' item' + (nreq > 1 ? 's' : '') + ' you do not have</b><div><button class="btn sm" style="margin-top:8px" data-act="tab" data-v="req">View list</button></div></div>';
+  return h;
+}
+function viewHome() {
+  const m = S.month, y = m.slice(0, 4), mm = +m.slice(5, 7);
+  const k = summary(m);
+  const tiles = [
+    ['TOTAL SALES', inr0(k.tot), '#E6F2EA', '#2E7D4F'], ['TOTAL PURCHASE AMOUNT', inr0(k.pur), '#FBEFDD', '#E08A2E'],
+    ['TOTAL EXPENSES', inr0(k.exp), '#FBEFDD', '#E08A2E'], ['TOTAL GROSS PROFIT', inr0(k.gp), '#E6F2EA', '#2E7D4F'],
+    ['ESTIMATED NET PROFIT', '<span style="color:' + (k.net < 0 ? '#c0392b' : 'inherit') + '">' + inr0(k.net) + '</span>', '#E6F2EA', '#2E7D4F'],
+    ['CASH SALES', inr0(k.cash), '#E6EEF8', '#2F80ED'], ['UPI SALES', inr0(k.upi), '#E6EEF8', '#2F80ED'],
+    ['CREDIT SALES', inr0(k.cred), '#E6EEF8', '#2F80ED'], ['CUSTOMER OUTSTANDING (all dates)', inr0(k.out), '#FCE8E5', '#D64541'],
+    ['LOW STOCK ITEMS', '<span style="color:' + (k.low.length ? '#c0392b' : 'inherit') + '">' + k.low.length + '</span>', '#FCE8E5', '#D64541']
+  ];
+  const days = new Date(+y, mm, 0).getDate();
+  const dLab = [], dVal = [];
+  for (let d = 1; d <= days; d++) { dLab.push(d); const ds = m + '-' + pad(d); dVal.push(sum(db.sales.filter(s => s.date === ds), s => s.qty * s.price)); }
+  const mLab = MON, mS = [], mG = [], mE = [], mN = [];
+  for (let i = 1; i <= 12; i++) {
+    const p = y + '-' + pad(i), ss = db.sales.filter(s => s.date.startsWith(p));
+    const g = sum(ss, s => s.qty * (s.price - s.cost)), e = sum(db.expenses.filter(x => x.date.startsWith(p)), x => x.amt);
+    mS.push(sum(ss, s => s.qty * s.price)); mG.push(g); mE.push(e); mN.push(g - e);
+  }
+  const cats = db.cats.map(c => [c, sum(db.expenses.filter(e => e.date.startsWith(m) && e.cat === c), e => e.amt)]);
+  const known = new Set(db.cats);
+  const other = sum(db.expenses.filter(e => e.date.startsWith(m) && !known.has(e.cat)), e => e.amt);
+  if (other) cats.push(['Other (old category)', other]);
+  const cs = cats.filter(c => c[1] > 0).sort((a, b) => b[1] - a[1]);
+  const cmax = cs.length ? cs[0][1] : 1;
+  const pend = sum(db.purchases.filter(p => p.status === 'Pending'), p => p.qty * p.price);
+  const bills = db.credit.filter(c => credStatus(c) !== 'Paid').length;
+  return homeAlerts() + '<div class="card"><label style="margin-top:0">Select month</label><input type="month" id="month" value="' + m + '"></div>' +
+    '<div class="kpis">' + tiles.map(t => '<div class="kpi" style="background:' + t[2] + ';border-top-color:' + t[3] + '"><small>' + t[0] + '</small><b>' + t[1] + '</b></div>').join('') + '</div>' +
+    '<div class="card"><h2>Low stock – please re-order</h2>' + (k.low.length ? k.low.map(x => '<div class="li"><div class="m"><div>' + esc(x.i.name) + '</div><div>Left ' + num(x.s.close) + ' · Minimum ' + num(x.i.min) + '</div></div><span class="badge ' + (x.s.status === 'OUT' ? 'b-out">OUT OF STOCK' : 'b-low">LOW STOCK') + '</span></div>').join('') : '<div class="empty">All items have enough stock.</div>') + '</div>' +
+    '<div class="card"><h2>This month at a glance</h2>' +
+    '<div class="li"><div class="m"><div>Gross profit margin</div></div><div class="a">' + (k.tot ? (k.gp / k.tot * 100).toFixed(1) : '0.0') + '%</div></div>' +
+    '<div class="li"><div class="m"><div>Pending payments to suppliers</div></div><div class="a">' + inr0(pend) + '</div></div>' +
+    '<div class="li"><div class="m"><div>Customer bills still due</div></div><div class="a">' + bills + '</div></div></div>' +
+    '<div class="card"><h2>Daily sales – ' + MON[mm - 1] + ' ' + y + '</h2>' + vchart(dLab, [{name: 'Sales', color: '#2E7D4F', values: dVal}]) + '</div>' +
+    '<div class="card"><h2>Monthly sales – ' + y + '</h2>' + vchart(mLab, [{name: 'Sales', color: '#2F80ED', values: mS}]) + '</div>' +
+    '<div class="card"><h2>Profit and expenses – ' + y + '</h2>' + vchart(mLab, [{name: 'Gross profit', color: '#2E7D4F', values: mG}, {name: 'Expenses', color: '#E08A2E', values: mE}, {name: 'Net profit', color: '#2F80ED', values: mN}]) + '</div>' +
+    '<div class="card hb"><h2>Expenses by category – ' + MON[mm - 1] + ' ' + y + '</h2>' + (cs.length ? cs.map(c => '<div class="r"><i>' + esc(c[0]) + '</i><div class="bar"><b style="width:' + (c[1] / cmax * 100).toFixed(1) + '%"></b></div><span>' + inr0(c[1]) + '</span></div>').join('') : '<div class="empty">No expenses this month</div>') + '</div>';
+}
+
+const billCredit = b => db.credit.find(c => c.billId === b.id);
+function billStatus(b) { const c = billCredit(b); if (!c) return ['Paid', 'b-ok']; const st = credStatus(c); return st === 'Paid' ? ['Paid', 'b-ok'] : st === 'Pending' ? ['Udhaar', 'b-pend'] : ['Part paid', 'b-part']; }
+const billLabel = b => b.credit <= 0.001 ? b.mode : (b.paid > 0 ? b.mode + ' + Credit' : 'Credit');
+function custNames() { return [...new Set(db.credit.map(c => c.name).concat(db.bills.map(b => b.customer).filter(Boolean)))]; }
+function billCalc() {
+  const total = r2(sum(S.cart, l => (+l.qty || 0) * (+l.price || 0)));
+  const recv = Math.max(0, S.recv === '' ? 0 : (+S.recv || 0));
+  const applied = r2(Math.min(recv, total));
+  return {total, recv, applied, change: r2(Math.max(0, recv - total)), credit: r2(total - applied)};
+}
+function cartHtml() {
+  if (!S.cart.length) return '<div class="empty">Tap an item above to add it to the bill</div>';
+  return S.cart.map((l, i) => '<div class="cl"><div class="m"><b>' + esc(l.item) + '</b><div class="rt">Rate ₹<input class="cp" data-i="' + i + '" type="number" inputmode="decimal" step="any" min="0" value="' + l.price + '"></div></div>' +
+    '<div class="qs"><button data-act="qdec" data-id="' + i + '" aria-label="Less">−</button><input class="cq" data-i="' + i + '" type="number" inputmode="decimal" step="any" min="0" value="' + l.qty + '"><button data-act="qinc" data-id="' + i + '" aria-label="More">+</button></div>' +
+    '<div class="la" id="la' + i + '">' + inr((+l.qty || 0) * (+l.price || 0)) + '</div><button class="x" data-act="cdel" data-id="' + i + '" aria-label="Remove">✕</button></div>').join('');
+}
+function updateResults() {
+  const el = $('results'); if (!el) return;
+  const q = S.q.trim().toLowerCase(), cnt = {};
+  db.sales.forEach(x => cnt[x.item] = (cnt[x.item] || 0) + 1);
+  const list = db.items.filter(i => !q || i.name.toLowerCase().includes(q)).sort((a, b) => (cnt[b.name] || 0) - (cnt[a.name] || 0));
+  let h = list.slice(0, q ? 10 : 8).map(i => { const st = stockOf(i);
+    return '<button class="res" data-act="addCart" data-id="' + i.id + '"><span>' + esc(i.name) + '</span><small>' + inr(i.sp) + ' · ' + (st.status === 'OUT' ? '<b style="color:#c0392b">out of stock</b>' : 'left ' + num(st.close)) + '</small><i>＋</i></button>'; }).join('');
+  if (q && !list.length) h = '<div class="empty" style="padding:8px">No item "' + esc(S.q.trim()) + '" in your stock list.</div><button class="btn ghost" style="margin-top:0" data-act="addReq" data-v="' + esc(S.q.trim()) + '">📝 Note it as customer request</button>';
+  else if (q) h += '<div class="note">Item not here? <a href="#" data-act="addReq" data-v="' + esc(S.q.trim()) + '">Note it as customer request</a></div>';
+  el.innerHTML = h;
+}
+function updatePay() {
+  const box = $('payInfo'), btn = $('saveBill'); if (!box) return;
+  const c = billCalc();
+  if (!S.cart.length) { box.innerHTML = ''; btn.textContent = 'Save bill'; btn.disabled = true; btn.style.opacity = .5; return; }
+  btn.disabled = false; btn.style.opacity = 1;
+  let h = '<div class="tot"><span>Bill total</span><b>' + inr(c.total) + '</b></div>', label;
+  if (S.recv === '') { h += '<div class="pay p-hint">Type the amount received, or tap <b>Exact</b>. If nothing is received, the full bill goes to Udhaar.</div>'; label = 'Save bill – ' + inr(c.total) + ' to Udhaar'; }
+  else if (c.change > 0.001) { h += '<div class="pay p-chg">Give change to customer<br><b>' + inr(c.change) + '</b></div>'; label = 'Save bill – give ' + inr(c.change) + ' change'; }
+  else if (c.credit > 0.001) { h += '<div class="pay p-due">Part payment. Balance goes to Udhaar<br><b>' + inr(c.credit) + '</b></div>'; label = 'Save bill – ' + inr(c.credit) + ' to Udhaar'; }
+  else { h += '<div class="pay p-ok">Paid in full ✔</div>'; label = 'Save bill – Paid'; }
+  box.innerHTML = h; btn.textContent = label;
+}
+function custNote() {
+  const el = $('custNote'); if (!el) return;
+  const n = S.cust.trim().toLowerCase(), due = n ? sum(db.credit.filter(c => c.name.toLowerCase() === n), balance) : 0;
+  el.innerHTML = due > 0.001 ? 'This customer already owes <b>' + inr(due) + '</b> (old Udhaar)' : '';
+}
+function refreshCart() { $('cartBox').innerHTML = cartHtml(); updatePay(); }
+function initBill() { updateResults(); refreshCart(); custNote(); }
+function viewSales() {
+  if (!db.items.length) return '<div class="card"><div class="empty">First add your items in the Stock tab.</div><button class="btn" data-act="tab" data-v="stock">Go to Stock</button></div>';
+  const nreq = db.requests.filter(r => !r.done).length;
+  const td = db.sales.filter(x => x.date === today());
+  const recent = groupByDate(newestFirst(db.bills).slice(0, 60));
+  const old = newestFirst(db.sales.filter(x => !x.billId)).slice(0, 30);
+  return '<div class="card"><h2>New bill</h2>' +
+    '<label style="margin-top:0">Customer name <span style="color:var(--mu)">(only needed if money is pending)</span></label>' +
+    '<input id="bCust" list="custList" placeholder="Walk-in customer" autocomplete="off" value="' + esc(S.cust) + '">' +
+    '<datalist id="custList">' + custNames().map(n => '<option value="' + esc(n) + '">').join('') + '</datalist><div class="note" id="custNote"></div>' +
+    '<label>Search item</label><input id="bSearch" type="search" placeholder="Type item name…" autocomplete="off" value="' + esc(S.q) + '">' +
+    '<div id="results"></div>' +
+    '<div class="dh"><span>BILL ITEMS</span></div><div id="cartBox"></div>' +
+    '<label>Payment mode</label><div id="bmodeChips">' + chips('bmode', ['Cash', 'UPI'], S.bmode) + '</div>' +
+    '<label>Amount received from customer (₹)</label><div class="rowf"><input id="bRecv" style="flex:1" type="number" inputmode="decimal" step="any" min="0" placeholder="0" value="' + esc(S.recv) + '"><button class="btn ghost sm" data-act="exact">Exact</button></div>' +
+    '<div id="payInfo"></div><button class="btn" id="saveBill" data-act="saveBill">Save bill</button>' +
+    '<div class="note" style="text-align:center;margin-top:10px">Customer asked for something you do not have? <a href="#" data-act="addReq" data-v="">Note it</a>' + (nreq ? ' · <a href="#" data-act="tab" data-v="req">View list (' + nreq + ')</a>' : '') + '</div></div>' +
+    '<div class="card"><h2>Today: ' + inr(sum(td, x => x.qty * x.price)) + ' <span style="font-weight:400;color:var(--mu);font-size:12px">(' + (n => n + (n === 1 ? ' bill' : ' bills'))(db.bills.filter(b => b.date === today()).length) + ')</span></h2>' +
+    (recent.length ? recent.map(([d, rows]) => '<div class="dh"><span>' + fmtDate(d) + '</span><span>' + inr(sum(rows, b => b.total)) + '</span></div>' +
+      rows.map(b => { const st = billStatus(b);
+        return '<div class="li" data-act="viewBill" data-id="' + b.id + '"><div class="m"><div>' + b.no + (b.customer ? ' · ' + esc(b.customer) : '') + '</div><div>' + esc(b.lines.map(l => l.item + ' ×' + num(l.qty)).join(', ')) + '</div></div>' +
+          '<span class="badge ' + st[1] + '">' + st[0] + '</span><div class="a">' + inr(b.total) + '</div><button class="x" data-act="delBill" data-id="' + b.id + '" aria-label="Delete">✕</button></div>'; }).join('')).join('')
+      : '<div class="empty">No bills yet. Make your first bill above.</div>') + '<p class="note">Tap a bill to see the receipt again.</p></div>' +
+    (old.length ? '<div class="card"><h2>Earlier single sales</h2>' + old.map(x => '<div class="li"><div class="m"><div>' + esc(x.item) + '</div><div>' + fmtDate(x.date) + ' · ' + num(x.qty) + ' × ' + inr(x.price) + ' · profit ' + inr(x.qty * (x.price - x.cost)) + '</div></div>' +
+        '<span class="badge ' + (x.mode === 'Credit' ? 'b-cred' : 'b-ok') + '">' + x.mode + '</span><div class="a">' + inr(x.qty * x.price) + '</div><button class="x" data-act="delSale" data-id="' + x.id + '" aria-label="Delete">✕</button></div>').join('') + '</div>' : '');
+}
+
+/* ----- receipt ----- */
+function receiptHtml(b) {
+  const st = db.settings;
+  return '<div class="rcpt"><div class="rc-h"><b>' + esc(st.shop) + '</b>' + (st.addr ? '<div>' + esc(st.addr) + '</div>' : '') + (st.phone ? '<div>Ph: ' + esc(st.phone) + '</div>' : '') + '</div>' +
+    '<div class="rc-m"><span>Bill: ' + b.no + '</span><span>' + fmtDate(b.date) + ' ' + b.time + '</span></div>' + (b.customer ? '<div class="rc-m"><span>Customer: ' + esc(b.customer) + '</span></div>' : '') +
+    '<table><tr><th>Item</th><th class="r">Qty</th><th class="r">Rate</th><th class="r">Amount</th></tr>' +
+    b.lines.map(l => '<tr><td>' + esc(l.item) + '</td><td class="r">' + num(l.qty) + '</td><td class="r">' + inr(l.price) + '</td><td class="r">' + inr(l.qty * l.price) + '</td></tr>').join('') + '</table>' +
+    '<div class="t big"><span>TOTAL</span><span>' + inr(b.total) + '</span></div>' +
+    (b.change > 0 ? '<div class="t"><span>Received (' + b.mode + ')</span><span>' + inr(b.recv) + '</span></div><div class="t"><span>Change returned</span><span>' + inr(b.change) + '</span></div>' : (b.paid > 0 ? '<div class="t"><span>Paid (' + b.mode + ')</span><span>' + inr(b.paid) + '</span></div>' : '')) +
+    (b.credit > 0.001 ? '<div class="t big"><span>BALANCE DUE</span><span>' + inr(b.credit) + '</span></div>' : '') +
+    (st.foot ? '<div class="ft">' + esc(st.foot) + '</div>' : '') + '</div>';
+}
+function receiptText(b) {
+  const st = db.settings, L = [st.shop];
+  if (st.addr) L.push(st.addr); if (st.phone) L.push('Ph: ' + st.phone);
+  L.push('Bill: ' + b.no + '   ' + fmtDate(b.date) + ' ' + b.time); if (b.customer) L.push('Customer: ' + b.customer);
+  L.push('------------------------------');
+  b.lines.forEach(l => { L.push(l.item); L.push('   ' + num(l.qty) + ' x ' + inr(l.price) + ' = ' + inr(l.qty * l.price)); });
+  L.push('------------------------------', 'TOTAL: ' + inr(b.total));
+  if (b.change > 0) L.push('Received (' + b.mode + '): ' + inr(b.recv), 'Change returned: ' + inr(b.change));
+  else if (b.paid > 0) L.push('Paid (' + b.mode + '): ' + inr(b.paid));
+  if (b.credit > 0.001) L.push('BALANCE DUE: ' + inr(b.credit));
+  if (st.foot) L.push('', st.foot);
+  return L.join('\n');
+}
+function showReceipt(b) {
+  $('sheet').innerHTML = '<div class="sh">' + receiptHtml(b) + '<div class="row" style="margin-top:12px"><button class="btn ghost" data-act="close">Close</button><button class="btn ghost" data-act="printRcpt">Print</button><button class="btn" data-act="shareRcpt" data-id="' + b.id + '">Share</button></div></div>';
+  $('sheet').classList.add('open');
+}
+
+/* ----- customer requests ----- */
+function viewReq() {
+  const open = db.requests.filter(r => !r.done).sort((a, b) => b.count - a.count || (a.last < b.last ? 1 : -1));
+  const done = db.requests.filter(r => r.done);
+  const card = r => '<div class="card" style="padding:10px 12px"><div class="m"><div style="font-weight:600">' + esc(r.name) + '</div><div class="note" style="margin:2px 0 0">' + (r.note ? esc(r.note) + ' · ' : '') + 'Asked ' + r.count + '× · last ' + fmtDate(r.last) + '</div>' + (r.cust.length ? '<div class="note" style="margin:2px 0 0">By: ' + esc(r.cust.join(', ')) + '</div>' : '') + '</div>' +
+    '<div class="rowf" style="margin-top:8px">' + (r.done ? '<button class="btn ghost sm" data-act="reqDone" data-id="' + r.id + '">Undo</button>' :
+      '<button class="btn ghost sm" data-act="reqPlus" data-id="' + r.id + '">Asked again +1</button><button class="btn ghost sm" data-act="reqToItem" data-id="' + r.id + '">Add to stock</button><button class="btn sm" data-act="reqDone" data-id="' + r.id + '">Got it ✓</button>') +
+    '<button class="x" data-act="reqDel" data-id="' + r.id + '" aria-label="Delete">✕</button></div></div>';
+  return '<button class="btn" style="margin-top:0;margin-bottom:12px" data-act="addReq" data-v="">+ Customer asked for something</button>' +
+    '<p class="note" style="margin:0 0 10px">Items customers asked for but you do not have. The most asked item is on top – a good hint for what to buy next.</p>' +
+    (open.length ? open.map(card).join('') : '<div class="card"><div class="empty">No pending requests.</div></div>') +
+    (done.length ? '<div class="dh"><span>DONE (' + done.length + ')</span></div>' + done.map(card).join('') : '');
+}
+
+function viewStock() {
+  const rows = db.items.map(i => ({i, s: stockOf(i)}));
+  const val = sum(rows, r => r.s.value), low = rows.filter(r => r.s.status !== 'OK').length;
+  return '<button class="btn" style="margin-top:0;margin-bottom:12px" data-act="addItem">+ Add item</button>' +
+    '<div class="card"><div class="li" style="border:0"><div class="m"><div>Total stock value</div><div>' + rows.length + ' items · ' + low + ' low</div></div><div class="a">' + inr(val) + '</div></div></div>' +
+    (rows.length ? rows.map(r => '<div class="card" style="padding:10px 12px"><div class="li" style="border:0;padding:0"><div class="m"><div>' + esc(r.i.name) + '</div>' +
+      '<div>Opening ' + num(r.i.open) + ' + bought ' + num(r.s.bought) + ' − sold ' + num(r.s.sold) + '</div>' +
+      '<div>Buy ' + inr(r.i.pp) + ' · Sell ' + inr(r.i.sp) + ' · Min ' + num(r.i.min) + ' · Value ' + inr(r.s.value) + '</div></div>' +
+      '<div class="a" style="font-size:22px">' + num(r.s.close) + '<small><span class="badge ' + (r.s.status === 'OK' ? 'b-ok">OK' : r.s.status === 'LOW' ? 'b-low">LOW STOCK' : 'b-out">OUT OF STOCK') + '</span></small></div>' +
+      '<button class="btn ghost sm" data-act="editItem" data-id="' + r.i.id + '">Edit</button></div></div>').join('')
+      : '<div class="card"><div class="empty">No items yet. Tap "+ Add item".</div></div>');
+}
+
+function viewBuy() {
+  if (!db.items.length) return '<div class="card"><div class="empty">First add your items in the Stock tab.</div><button class="btn" data-act="tab" data-v="stock">Go to Stock</button></div>';
+  const sup = [...new Set(db.purchases.map(p => p.supplier))];
+  const pend = sum(db.purchases.filter(p => p.status === 'Pending'), p => p.qty * p.price);
+  const recent = groupByDate(newestFirst(db.purchases).slice(0, 60));
+  return '<div class="card"><h2>New purchase</h2>' +
+    '<div class="row2"><div><label>Date</label><input type="date" id="pDate" value="' + S.pDate + '"></div>' +
+    '<div><label>Supplier</label><input id="pSup" list="supList" placeholder="Supplier name"></div></div>' +
+    '<datalist id="supList">' + sup.map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
+    '<label>Item</label><select id="pItem">' + opts(db.items.map(i => i.name)) + '</select>' +
+    '<div class="row2"><div><label>Quantity purchased</label><input id="pQty" type="number" inputmode="decimal" step="any" min="0" placeholder="0"></div>' +
+    '<div><label>Purchase price (₹)</label><input id="pPrice" type="number" inputmode="decimal" step="any" min="0" value="' + db.items[0].pp + '"></div></div>' +
+    '<label>Payment status</label><div id="pstatChips">' + chips('pstat', ['Paid', 'Pending'], S.pstat) + '</div>' +
+    '<div class="tot"><span>Total amount</span><b id="pTotal">₹0</b></div>' +
+    '<button class="btn" data-act="addPur">Add purchase</button></div>' +
+    '<div class="card"><h2>Purchases <span style="font-weight:400;color:var(--mu);font-size:12px">· to pay suppliers: ' + inr(pend) + '</span></h2>' +
+    (recent.length ? recent.map(([d, rows]) => '<div class="dh"><span>' + fmtDate(d) + '</span><span>' + inr(sum(rows, p => p.qty * p.price)) + '</span></div>' +
+      rows.map(p => '<div class="li"><div class="m"><div>' + esc(p.item) + '</div><div>' + esc(p.supplier || '—') + ' · ' + num(p.qty) + ' × ' + inr(p.price) + '</div></div>' +
+        '<button class="badge ' + (p.status === 'Paid' ? 'b-ok' : 'b-pend') + '" data-act="togglePur" data-id="' + p.id + '">' + p.status + '</button><div class="a">' + inr(p.qty * p.price) + '</div><button class="x" data-act="delPur" data-id="' + p.id + '" aria-label="Delete">✕</button></div>').join('')).join('')
+      : '<div class="empty">No purchases yet.</div>') + '<p class="note">Tip: tap Paid / Pending to change it after you pay the supplier.</p></div>';
+}
+
+function viewExp() {
+  const m = today().slice(0, 7);
+  const recent = groupByDate(newestFirst(db.expenses).slice(0, 80));
+  return '<div class="card"><h2>New expense</h2>' +
+    '<div class="row2"><div><label>Date</label><input type="date" id="eDate" value="' + S.eDate + '"></div>' +
+    '<div><label>Category</label><select id="eCat">' + opts(db.cats) + '</select></div></div>' +
+    '<label>Description</label><input id="eDesc" placeholder="e.g. Auto charges">' +
+    '<label>Amount (₹)</label><input id="eAmt" type="number" inputmode="decimal" step="any" min="0" placeholder="0">' +
+    '<button class="btn" data-act="addExp">Add expense</button></div>' +
+    '<div class="card"><h2>This month: ' + inr(sum(db.expenses.filter(e => e.date.startsWith(m)), e => e.amt)) + '</h2>' +
+    (recent.length ? recent.map(([d, rows]) => '<div class="dh"><span>' + fmtDate(d) + '</span><span>' + inr(sum(rows, e => e.amt)) + '</span></div>' +
+      rows.map(e => '<div class="li"><div class="m"><div>' + esc(e.cat) + '</div><div>' + esc(e.desc || '') + '</div></div><div class="a">' + inr(e.amt) + '</div><button class="x" data-act="delExp" data-id="' + e.id + '" aria-label="Delete">✕</button></div>').join('')).join('')
+      : '<div class="empty">No expenses yet.</div>') + '</div>';
+}
+
+function viewUdhaar() {
+  const out = sum(db.credit, balance);
+  const byName = {};
+  db.credit.forEach(c => { byName[c.name] = (byName[c.name] || 0) + balance(c); });
+  const owing = Object.entries(byName).filter(e => e[1] > 0.0001).sort((a, b) => b[1] - a[1]);
+  let list = newestFirst(db.credit);
+  if (S.filter === 'due') list = list.filter(c => credStatus(c) !== 'Paid');
+  return '<button class="btn" style="margin-top:0;margin-bottom:12px" data-act="addCredit">+ New credit (udhaar)</button>' +
+    '<div class="card"><div class="li" style="border:0;padding:0"><div class="m"><div>Total customer outstanding</div><div>' + owing.length + ' customers owe you</div></div><div class="a" style="font-size:20px;color:var(--red)">' + inr(out) + '</div></div></div>' +
+    (owing.length ? '<div class="card"><h2>Who owes how much</h2>' + owing.map(e => '<div class="li"><div class="m"><div>' + esc(e[0]) + '</div></div><div class="a">' + inr(e[1]) + '</div></div>').join('') + '</div>' : '') +
+    '<div class="card"><h2>Bills</h2>' + chips('filter', ['due', 'all'], S.filter).replace('>due<', '>Still due<').replace('>all<', '>All bills<') +
+    (list.length ? list.map(c => {
+      const st = credStatus(c);
+      return '<div class="li"><div class="m"><div>' + esc(c.name) + '</div><div>' + fmtDate(c.date) + ' · ' + esc(c.desc || '') + '</div><div>Credit ' + inr(c.amt) + ' · Paid ' + inr(c.paid) + '</div></div>' +
+        '<div class="a">' + inr(balance(c)) + '<small><span class="badge ' + (st === 'Paid' ? 'b-ok' : st === 'Pending' ? 'b-pend' : 'b-part') + '">' + st + '</span></small></div>' +
+        (st !== 'Paid' ? '<button class="btn sm" data-act="payCredit" data-id="' + c.id + '">Received</button>' : '') +
+        '<button class="x" data-act="delCredit" data-id="' + c.id + '" aria-label="Delete">✕</button></div>';
+    }).join('') : '<div class="empty">' + (S.filter === 'due' ? 'Nobody owes you anything. 👍' : 'No credit bills yet.') + '</div>') + '</div>';
+}
+
+let installEvt = null;
+function viewMore() {
+  const last = db.settings.lastBackup, nreq = db.requests.filter(r => !r.done).length;
+  return '<div class="card"><h2>Backup</h2><p class="note" style="margin:0 0 6px">Your data is stored on this phone. Last backup: <b>' + (last ? fmtDate(last) : 'never') + '</b></p>' +
+    '<button class="btn" data-act="shareJson">☁ Backup to Google Drive</button>' +
+    '<button class="btn ghost" data-act="shareXlsx">☁ Excel file to Google Drive / share</button>' +
+    '<div class="rowf" style="margin-top:10px"><button class="btn ghost sm" data-act="xlsx">⬇ Download Excel</button><button class="btn ghost sm" data-act="backup">⬇ Download backup (.json)</button></div>' +
+    '<p class="note">Tap the first button, then choose <b>Drive</b> in the list and save. To bring data back (new phone), use <b>Restore</b> below with the .json file. The Excel file is for reading and printing.</p>' +
+    '<button class="btn ghost" data-act="restore">⬆ Restore from backup file (.json)</button></div>' +
+    '<div class="card"><h2>Customer requests</h2><button class="btn ghost" style="margin-top:0" data-act="tab" data-v="req">📝 View list' + (nreq ? ' (' + nreq + ')' : '') + '</button></div>' +
+    '<div class="card"><h2>Shop details on bill</h2><p class="note" style="margin:0 0 6px">' + esc(db.settings.shop) + (db.settings.phone ? ' · ' + esc(db.settings.phone) : '') + '</p><button class="btn ghost" style="margin-top:0" data-act="shopSet">Edit shop name, phone, address</button></div>' +
+    '<div class="card"><h2>Expense categories</h2><button class="btn ghost" style="margin-top:0" data-act="editCats">Edit categories</button></div>' +
+    (installEvt ? '<div class="card"><h2>Install</h2><button class="btn" style="margin-top:0" data-act="install">Add Maligai Kadai to home screen</button></div>' : '') +
+    '<div class="card"><h2>Try it out</h2><p class="note" style="margin:0 0 6px">Fill the app with sample data (5 grocery items) to test. This replaces what is in the app now.</p>' +
+    '<button class="btn ghost" data-act="sample">Load sample data</button>' +
+    '<button class="btn red" data-act="erase">Erase all data</button></div>' +
+    '<p class="note" style="text-align:center">Maligai Kadai · works offline · version 2</p>';
+}
+
+/* ============ render ============ */
+const TABS = [['home', '📊', 'Home', 'Dashboard'], ['sales', '🧾', 'Bill', 'New Bill'], ['stock', '📦', 'Stock', 'Stock'], ['buy', '🚚', 'Buy', 'Purchases'], ['exp', '💸', 'Expense', 'Daily Expenses'], ['udhaar', '📒', 'Udhaar', 'Customer Credit']];
+const VIEWS = {home: viewHome, sales: viewSales, stock: viewStock, buy: viewBuy, exp: viewExp, udhaar: viewUdhaar, more: viewMore, req: viewReq};
+function render() {
+  $('nav').innerHTML = TABS.map(t => '<button class="' + (S.tab === t[0] ? 'on' : '') + '" data-act="tab" data-v="' + t[0] + '"><span>' + t[1] + '</span>' + t[2] + '</button>').join('');
+  const t = TABS.find(x => x[0] === S.tab);
+  $('title').textContent = 'Maligai Kadai – ' + (t ? t[3] : S.tab === 'req' ? 'Customer Requests' : 'More');
+  $('view').innerHTML = VIEWS[S.tab]();
+  if (S.tab === 'sales') initBill();
+  if (S.tab === 'buy') calcPT();
+}
+function calcPT() { const q = +$('pQty').value || 0, p = +$('pPrice').value || 0; $('pTotal').textContent = inr(q * p); }
+function setChips(box, v) { [...$(box).querySelectorAll('.chip')].forEach(c => c.classList.toggle('on', c.dataset.v === v)); }
+
+/* ============ item / credit forms ============ */
+function itemForm(it) {
+  it = it || {name: '', open: '', pp: '', sp: '', min: ''};
+  const f = (id, l, v, t) => '<label>' + l + '</label><input id="' + id + '" ' + (t ? 'type="number" inputmode="decimal" step="any" min="0"' : '') + ' value="' + esc(v) + '">';
+  return f('iName', 'Item name (with pack size, e.g. Sugar (1 kg))', it.name) + f('iOpen', 'Opening stock', it.open, 1) + f('iPP', 'Purchase price (₹)', it.pp, 1) + f('iSP', 'Selling price (₹)', it.sp, 1) + f('iMin', 'Minimum stock (low-stock alert)', it.min, 1);
+}
+function readItem(existing) {
+  const name = $('iName').value.trim(), open = +$('iOpen').value || 0, pp = +$('iPP').value || 0, sp = +$('iSP').value || 0, min = +$('iMin').value || 0;
+  if (!name) { toast('Please type the item name'); return null; }
+  if (db.items.some(i => i.name.toLowerCase() === name.toLowerCase() && (!existing || i.id !== existing.id))) { toast('This item name already exists'); return null; }
+  return {name, open, pp, sp, min};
+}
+
+/* ============ actions ============ */
+const ACT = {
+  tab(v) { S.tab = v; render(); window.scrollTo(0, 0); },
+  more() { S.tab = 'more'; render(); window.scrollTo(0, 0); },
+  close() { closeSheet(); },
+  bmode(v) { S.bmode = v; setChips('bmodeChips', v); },
+  pstat(v) { S.pstat = v; setChips('pstatChips', v); },
+  filter(v) { S.filter = v; render(); },
+  addCart(v, id) {
+    const it = db.items.find(i => i.id === id); if (!it) return;
+    const l = S.cart.find(x => x.item === it.name);
+    if (l) l.qty = r3((+l.qty || 0) + 1); else S.cart.push({item: it.name, qty: 1, price: it.sp});
+    S.q = ''; $('bSearch').value = ''; updateResults(); refreshCart();
+  },
+  qinc(v, i) { const l = S.cart[+i]; if (l) { l.qty = r3((+l.qty || 0) + 1); refreshCart(); } },
+  qdec(v, i) { const l = S.cart[+i]; if (!l) return; const q = r3((+l.qty || 0) - 1); if (q <= 0) S.cart.splice(+i, 1); else l.qty = q; refreshCart(); },
+  cdel(v, i) { S.cart.splice(+i, 1); refreshCart(); },
+  exact() { S.recv = String(billCalc().total); $('bRecv').value = S.recv; updatePay(); },
+  saveBill() {
+    if (!S.cart.length) return toast('Tap items to add them to the bill first');
+    const lines = S.cart.map(l => ({item: l.item, qty: +l.qty, price: +l.price}));
+    if (lines.some(l => !(l.qty > 0) || !(l.price >= 0))) return toast('Please check quantity and rate of every item');
+    const c = billCalc(), cust = S.cust.trim();
+    if (c.credit > 0.001 && !cust) { toast('Please type the customer name – ' + inr(c.credit) + ' will go to Udhaar'); $('bCust').focus(); return; }
+    const date = today(), id = uid(), no = 'MK-' + pad4(++db.billNo);
+    const b = {id, no, date, time: nowTime(), customer: cust, lines, total: c.total, paid: c.applied, recv: c.recv, change: c.change, credit: c.credit,
+               cash: S.bmode === 'Cash' ? c.applied : 0, upi: S.bmode === 'UPI' ? c.applied : 0, mode: S.bmode};
+    db.bills.push(b);
+    lines.forEach(l => { const it = db.items.find(i => i.name === l.item); db.sales.push({id: uid(), date, item: l.item, qty: l.qty, price: l.price, cost: it ? it.pp : 0, mode: billLabel(b), billId: id}); });
+    if (c.credit > 0.001) db.credit.push({id: uid(), name: cust, date, desc: 'Bill ' + no, amt: c.total, paid: c.applied, billId: id});
+    S.cart = []; S.recv = ''; S.cust = ''; S.q = '';
+    save(); render(); showReceipt(b);
+    const low = lines.map(l => db.items.find(i => i.name === l.item)).filter(Boolean).filter(i => stockOf(i).status !== 'OK');
+    if (low.length) toast('Low stock: ' + low.map(i => i.name).join(', '));
+  },
+  viewBill(v, id) { const b = db.bills.find(x => x.id === id); if (b) showReceipt(b); },
+  delBill(v, id) {
+    const b = db.bills.find(x => x.id === id); if (!b) return;
+    if (!confirm('Delete bill ' + b.no + '? Stock and Udhaar will be corrected.')) return;
+    db.bills = db.bills.filter(x => x.id !== id); db.sales = db.sales.filter(x => x.billId !== id); db.credit = db.credit.filter(c => c.billId !== id);
+    save(); render(); toast('Bill deleted');
+  },
+  printRcpt() { window.print(); },
+  async shareRcpt(v, id) {
+    const b = db.bills.find(x => x.id === id); if (!b) return;
+    const text = receiptText(b);
+    if (navigator.share) { try { await navigator.share({text}); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  },
+  addReq(v) {
+    sheet('Customer asked for…',
+      '<label>Item name</label><input id="rName" value="' + esc(v || '') + '" placeholder="e.g. Coconut oil 1 L">' +
+      '<label>How much / note (optional)</label><input id="rNote" placeholder="e.g. 2 packets, Brand X">' +
+      '<label>Customer name (optional)</label><input id="rCust" list="custList2"><datalist id="custList2">' + custNames().map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>',
+      () => {
+        const name = $('rName').value.trim(), note = $('rNote').value.trim(), cu = $('rCust').value.trim();
+        if (!name) { toast('Please type the item name'); return false; }
+        let r = db.requests.find(x => !x.done && x.name.toLowerCase() === name.toLowerCase());
+        if (r) { r.count++; r.last = today(); if (note) r.note = note; if (cu && !r.cust.includes(cu)) r.cust.push(cu); }
+        else { r = {id: uid(), name, note, cust: cu ? [cu] : [], count: 1, date: today(), last: today(), done: false}; db.requests.push(r); }
+        save(); render(); toast('Noted. Asked ' + r.count + ' time' + (r.count > 1 ? 's' : ''));
+      }, 'Save request');
+  },
+  reqPlus(v, id) { const r = db.requests.find(x => x.id === id); if (r) { r.count++; r.last = today(); save(); render(); } },
+  reqDone(v, id) { const r = db.requests.find(x => x.id === id); if (r) { r.done = !r.done; save(); render(); } },
+  reqDel(v, id) { if (confirm('Delete this request?')) { db.requests = db.requests.filter(x => x.id !== id); save(); render(); } },
+  reqToItem(v, id) {
+    const r = db.requests.find(x => x.id === id); if (!r) return;
+    sheet('Add to stock list', itemForm({name: r.name, open: '', pp: '', sp: '', min: ''}), () => {
+      const nv = readItem(); if (!nv) return false;
+      db.items.push(Object.assign({id: uid()}, nv)); r.done = true; save(); render(); toast('Item added to stock. Request marked done.');
+    });
+  },
+  shopSet() {
+    const st = db.settings, f = (id, l, v) => '<label>' + l + '</label><input id="' + id + '" value="' + esc(v) + '">';
+    sheet('Shop details (printed on bill)', f('shName', 'Shop name', st.shop) + f('shPhone', 'Phone number', st.phone) + f('shAddr', 'Address', st.addr) + f('shFoot', 'Message at bottom of bill', st.foot), () => {
+      st.shop = $('shName').value.trim() || 'Maligai Kadai'; st.phone = $('shPhone').value.trim(); st.addr = $('shAddr').value.trim(); st.foot = $('shFoot').value.trim(); save(); render(); toast('Saved');
+    });
+  },
+  delSale(v, id) {
+    const s = db.sales.find(x => x.id === id); if (!s) return;
+    const linked = db.credit.find(c => c.saleId === id);
+    if (!confirm('Delete this sale?' + (linked ? ' Its Udhaar entry will also be deleted.' : ''))) return;
+    db.sales = db.sales.filter(x => x.id !== id); db.credit = db.credit.filter(c => c.saleId !== id); save(); render();
+  },
+  addItem() {
+    sheet('Add item', itemForm(), () => { const v = readItem(); if (!v) return false; db.items.push(Object.assign({id: uid()}, v)); save(); render(); toast('Item added'); });
+  },
+  editItem(v, id) {
+    const it = db.items.find(i => i.id === id); if (!it) return;
+    sheet('Edit item', itemForm(it) + '<button class="btn red" data-act="delItem" data-id="' + id + '">Delete this item</button>', () => {
+      const v = readItem(it); if (!v) return false;
+      if (v.name !== it.name) { db.sales.forEach(s => { if (s.item === it.name) s.item = v.name; }); db.purchases.forEach(p => { if (p.item === it.name) p.item = v.name; }); }
+      Object.assign(it, v); save(); render(); toast('Item saved');
+    });
+  },
+  delItem(v, id) {
+    const it = db.items.find(i => i.id === id); if (!it) return;
+    if (db.sales.some(s => s.item === it.name) || db.purchases.some(p => p.item === it.name)) return toast('This item has sales or purchases, so it cannot be deleted');
+    if (!confirm('Delete ' + it.name + '?')) return;
+    db.items = db.items.filter(i => i.id !== id); save(); closeSheet(); render();
+  },
+  addPur() {
+    const date = $('pDate').value, item = $('pItem').value, qty = +$('pQty').value, price = +$('pPrice').value, supplier = $('pSup').value.trim();
+    if (!date || !item || !(qty > 0) || !(price >= 0)) return toast('Please fill date, item and quantity');
+    db.purchases.push({id: uid(), date, supplier, item, qty, price, status: S.pstat});
+    S.pDate = date; save(); toast('Purchase added'); render();
+  },
+  togglePur(v, id) { const p = db.purchases.find(x => x.id === id); if (p) { p.status = p.status === 'Paid' ? 'Pending' : 'Paid'; save(); render(); } },
+  delPur(v, id) { if (confirm('Delete this purchase?')) { db.purchases = db.purchases.filter(x => x.id !== id); save(); render(); } },
+  addExp() {
+    const date = $('eDate').value, cat = $('eCat').value, desc = $('eDesc').value.trim(), amt = +$('eAmt').value;
+    if (!date || !(amt > 0)) return toast('Please fill date and amount');
+    db.expenses.push({id: uid(), date, cat, desc, amt}); S.eDate = date; save(); toast('Expense added'); render();
+  },
+  delExp(v, id) { if (confirm('Delete this expense?')) { db.expenses = db.expenses.filter(x => x.id !== id); save(); render(); } },
+  addCredit() {
+    const names = [...new Set(db.credit.map(c => c.name))];
+    sheet('New credit (udhaar)',
+      '<label>Customer name</label><input id="cName" list="cList"><datalist id="cList">' + names.map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
+      '<label>Date</label><input type="date" id="cDate" value="' + today() + '">' +
+      '<label>Item / description</label><input id="cDesc">' +
+      '<div class="row2"><div><label>Credit amount (₹)</label><input id="cAmt" type="number" inputmode="decimal" step="any" min="0"></div>' +
+      '<div><label>Amount paid (₹)</label><input id="cPaid" type="number" inputmode="decimal" step="any" min="0" value="0"></div></div>',
+      () => {
+        const name = $('cName').value.trim(), date = $('cDate').value, desc = $('cDesc').value.trim(), amt = +$('cAmt').value, paid = +$('cPaid').value || 0;
+        if (!name || !date || !(amt > 0)) { toast('Please fill name, date and amount'); return false; }
+        if (paid > amt) { toast('Amount paid cannot be more than credit amount'); return false; }
+        db.credit.push({id: uid(), name, date, desc, amt, paid}); save(); render(); toast('Credit added');
+      });
+  },
+  payCredit(v, id) {
+    const c = db.credit.find(x => x.id === id); if (!c) return;
+    sheet('Payment from ' + esc(c.name), '<p class="note">Balance due: <b>' + inr(balance(c)) + '</b></p><label>Amount received now (₹)</label><input id="payAmt" type="number" inputmode="decimal" step="any" min="0" value="' + balance(c) + '">', () => {
+      const a = +$('payAmt').value;
+      if (!(a > 0) || a > balance(c) + 0.0001) { toast('Enter an amount up to ' + inr(balance(c))); return false; }
+      c.paid = Math.min(c.amt, c.paid + a); save(); render(); toast('Payment saved');
+    }, 'Save payment');
+  },
+  delCredit(v, id) { if (confirm('Delete this credit bill?')) { db.credit = db.credit.filter(x => x.id !== id); save(); render(); } },
+  editCats() {
+    sheet('Expense categories', '<p class="note">One category per line.</p><textarea id="catText" rows="12">' + esc(db.cats.join('\n')) + '</textarea>', () => {
+      const c = [...new Set($('catText').value.split('\n').map(x => x.trim()).filter(Boolean))];
+      if (!c.length) { toast('Keep at least one category'); return false; }
+      db.cats = c; save(); render();
+    });
+  },
+  xlsx() { exportXlsx(); },
+  backup() { download('maligai-kadai-backup-' + today() + '.json', new Blob([JSON.stringify(db)], {type: 'application/json'})); markBackup(); toast('Backup file saved'); },
+  shareJson() { shareFile('maligai-kadai-backup-' + today() + '.json', new Blob([JSON.stringify(db)], {type: 'application/json'})); },
+  shareXlsx() { shareFile('Maligai_Kadai_' + today() + '.xlsx', buildXlsx()); },
+  restore() { $('restoreFile').click(); },
+  install() { if (installEvt) { installEvt.prompt(); installEvt = null; render(); } },
+  sample() { if (confirm('Replace all data in the app with sample data?')) { db = sampleData(); save(); S.tab = 'home'; S.month = today().slice(0, 7); render(); toast('Sample data loaded'); } },
+  erase() { if (confirm('Erase ALL data from this app? Take a backup first.') && confirm('Really erase everything?')) { db = blank(); save(); render(); toast('All data erased'); } }
+};
+document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (!t) return; if (t.tagName === 'A') e.preventDefault(); const fn = ACT[t.dataset.act]; if (fn) fn(t.dataset.v, t.dataset.id, t); });
+document.addEventListener('input', e => {
+  const t = e.target, id = t.id;
+  if (id === 'pQty' || id === 'pPrice') calcPT();
+  if (id === 'bSearch') { S.q = t.value; updateResults(); }
+  if (id === 'bRecv') { S.recv = t.value; updatePay(); }
+  if (id === 'bCust') { S.cust = t.value; custNote(); }
+  if (t.classList && (t.classList.contains('cq') || t.classList.contains('cp'))) {
+    const i = +t.dataset.i, l = S.cart[i]; if (!l) return;
+    if (t.classList.contains('cq')) l.qty = t.value; else l.price = t.value;
+    $('la' + i).textContent = inr((+l.qty || 0) * (+l.price || 0)); updatePay();
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.id === 'month' && t.value) { S.month = t.value; render(); }
+  if (t.id === 'pItem') { const it = db.items.find(i => i.name === t.value); if (it) { $('pPrice').value = it.pp; calcPT(); } }
+  if (t.id === 'restoreFile' && t.files[0]) {
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (!d || !Array.isArray(d.items) || !Array.isArray(d.sales)) throw 0;
+        if (!confirm('Replace all data in the app with this backup?')) return;
+        db = fix(d); save(); render(); toast('Backup restored');
+      } catch (x) { toast('This is not a Maligai Kadai backup file'); }
+      t.value = '';
+    };
+    r.readAsText(t.files[0]);
+  }
+});
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; if (S.tab === 'more') render(); });
+
+/* ============ sample data ============ */
+function sampleData() {
+  const d = new Date(), cur = d.getFullYear() + '-' + pad(d.getMonth() + 1);
+  const pd = new Date(d.getFullYear(), d.getMonth() - 1, 1), prev = pd.getFullYear() + '-' + pad(pd.getMonth() + 1);
+  const dim = ym => new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0).getDate();
+  const dt = (o, day) => { const ym = o ? cur : prev; return ym + '-' + pad(Math.min(day, dim(ym))); };
+  const out = blank();
+  const I = [['Ponni Rice (1 kg)', 180, 52, 60, 60], ['Toor Dal (1 kg)', 75, 135, 155, 30], ['Sunflower Oil (1 L)', 90, 128, 145, 36], ['Sugar (1 kg)', 120, 42, 48, 45], ['Tea Powder (250 g)', 45, 105, 125, 30]];
+  I.forEach(x => out.items.push({id: uid(), name: x[0], open: x[1], pp: x[2], sp: x[3], min: x[4]}));
+  [[0,5,0,36,'Cash'],[0,5,3,24,'UPI'],[0,12,2,18,'Cash'],[0,18,1,15,'UPI'],[0,25,4,12,'Cash'],[0,28,0,30,'Credit','Selvi',1800],
+   [1,1,0,45,'Cash'],[1,1,3,30,'UPI'],[1,2,1,18,'Cash'],[1,3,2,24,'UPI'],[1,4,4,15,'Cash'],[1,5,0,27,'Credit','Murugan',500],[1,6,3,36,'Cash'],
+   [1,8,2,15,'Cash'],[1,9,1,12,'UPI'],[1,10,0,42,'UPI'],[1,11,4,9,'Credit','Kannan',0],[1,12,3,27,'Cash'],[1,13,2,21,'Credit','Meena',1000],
+   [1,15,0,33,'Cash'],[1,16,1,21,'UPI'],[1,17,3,30,'UPI'],[1,18,4,12,'Cash'],[1,19,2,18,'Cash'],[1,20,0,24,'UPI'],[1,21,1,15,'Credit','Raja',0],
+   [1,22,3,18,'Cash'],[1,22,0,21,'Cash']].forEach(r => {
+    const it = I[r[2]], sid = uid(), date = dt(r[0], r[1]);
+    out.sales.push({id: sid, date, item: it[0], qty: r[3], price: it[3], cost: it[2], mode: r[4]});
+    if (r[5]) out.credit.push({id: uid(), name: r[5], date, desc: it[0] + ' × ' + r[3], amt: r[3] * it[3], paid: r[6], saleId: sid});
+  });
+  [[0,2,'Sri Murugan Traders',0,150,52,'Paid'],[1,3,'Kumar Agencies',2,72,128,'Pending'],[1,7,'Sri Murugan Traders',0,120,53,'Paid'],
+   [1,14,'Annai Wholesale',1,60,134,'Paid'],[1,18,'Anbu Tea Depot',4,30,104,'Pending'],[1,20,'Annai Wholesale',3,60,42,'Paid']]
+    .forEach(r => out.purchases.push({id: uid(), date: dt(r[0], r[1]), supplier: r[2], item: I[r[3]][0], qty: r[4], price: r[5], status: r[6]}));
+  [[0,5,'Electricity','EB bill',1700],[0,14,'Transport','Auto charges',380],[0,20,'Tea & Snacks','Tea for shop',160],
+   [1,2,'Transport','Auto charges – goods from market',350],[1,5,'Electricity','EB bill',1850],[1,6,'Tea & Snacks','Tea for shop',150],
+   [1,10,'Packing Material','Paper covers and bags',280],[1,12,'Transport','Tempo hire for rice load',420],[1,15,'Phone & Internet','Mobile recharge',299],
+   [1,18,'Repairs','Weighing scale repair',250],[1,20,'Tea & Snacks','Tea for shop',180],[1,21,'Cleaning','Phenyl and broom',120]]
+    .forEach(r => out.expenses.push({id: uid(), date: dt(r[0], r[1]), cat: r[2], desc: r[3], amt: r[4]}));
+  return out;
+}
+
+/* ============ Excel (.xlsx) export – works offline, no library ============ */
+const CRC_T = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(buf) { let c = -1; for (let i = 0; i < buf.length; i++) c = CRC_T[(c ^ buf[i]) & 255] ^ (c >>> 8); return (c ^ -1) >>> 0; }
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const u16 = v => [v & 255, (v >> 8) & 255], u32 = v => [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >> 24) & 255];
+  files.forEach(f => {
+    const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data), size = data.length;
+    const lh = Uint8Array.from([...u32(0x04034b50), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(size), ...u32(size), ...u16(name.length), ...u16(0)]);
+    parts.push(lh, name, data);
+    central.push(Uint8Array.from([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0x21), ...u32(crc), ...u32(size), ...u32(size), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(off)]), name);
+    off += lh.length + name.length + size;
+  });
+  let cdSize = 0; central.forEach(c => cdSize += c.length);
+  const end = Uint8Array.from([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length), ...u32(cdSize), ...u32(off), ...u16(0)]);
+  return new Blob([...parts, ...central, end], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xe = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const colL = i => { let s = '', n = i + 1; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+const serial = d => { const p = d.split('-'); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000 + 25569; };
+function sheetXml(headers, rows, types, widths) {
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>' +
+    widths.map((w, i) => '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>').join('') + '</cols><sheetData>';
+  x += '<row r="1">' + headers.map((h, i) => '<c r="' + colL(i) + '1" t="inlineStr" s="1"><is><t>' + xe(h) + '</t></is></c>').join('') + '</row>';
+  rows.forEach((r, ri) => {
+    x += '<row r="' + (ri + 2) + '">' + r.map((v, i) => {
+      if (v === '' || v == null) return '';
+      const ref = colL(i) + (ri + 2), t = types[i];
+      if (t === 's') return '<c r="' + ref + '" t="inlineStr"><is><t>' + xe(v) + '</t></is></c>';
+      if (t === 'd') return '<c r="' + ref + '" s="2"><v>' + serial(v) + '</v></c>';
+      if (t === 'm') return '<c r="' + ref + '" s="3"><v>' + (Math.round(v * 100) / 100) + '</v></c>';
+      return '<c r="' + ref + '"><v>' + num(v) + '</v></c>';
+    }).join('') + '</row>';
+  });
+  return x + '</sheetData></worksheet>';
+}
+function buildXlsx() {
+  const asc = arr => arr.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const bmap = new Map(db.bills.map(b => [b.id, b]));
+  const sheets = [
+    ['Daily Sales', ['Date', 'Item Name', 'Quantity Sold', 'Selling Price (₹)', 'Total Sales (₹)', 'Cost Price (₹)', 'Profit (₹)', 'Payment Mode'],
+      asc(db.sales).map(s => [s.date, s.item, s.qty, s.price, s.qty * s.price, s.cost, s.qty * (s.price - s.cost), s.billId && bmap.get(s.billId) ? billLabel(bmap.get(s.billId)) : s.mode]), ['d', 's', 'n', 'm', 'm', 'm', 'm', 's'], [14, 28, 14, 16, 16, 14, 14, 14]],
+    ['Stock Inventory', ['Item Name', 'Opening Stock', 'Purchased Quantity', 'Sold Quantity', 'Closing Stock', 'Purchase Price (₹)', 'Selling Price (₹)', 'Stock Value (₹)', 'Minimum Stock Level', 'Low Stock Alert'],
+      db.items.map(i => { const s = stockOf(i); return [i.name, i.open, s.bought, s.sold, s.close, i.pp, i.sp, s.value, i.min, s.status === 'OK' ? 'OK' : s.status === 'LOW' ? 'LOW STOCK' : 'OUT OF STOCK']; }), ['s', 'n', 'n', 'n', 'n', 'm', 'm', 'm', 'n', 's'], [28, 14, 16, 14, 14, 16, 16, 16, 16, 16]],
+    ['Purchase Register', ['Date', 'Supplier Name', 'Item Name', 'Quantity Purchased', 'Purchase Price (₹)', 'Total Amount (₹)', 'Payment Status'],
+      asc(db.purchases).map(p => [p.date, p.supplier, p.item, p.qty, p.price, p.qty * p.price, p.status]), ['d', 's', 's', 'n', 'm', 'm', 's'], [14, 26, 28, 16, 16, 16, 14]],
+    ['Daily Expenses', ['Date', 'Expense Category', 'Description', 'Amount (₹)'],
+      asc(db.expenses).map(e => [e.date, e.cat, e.desc, e.amt]), ['d', 's', 's', 'm'], [14, 24, 40, 14]],
+    ['Customer Credit', ['Customer Name', 'Date', 'Item / Description', 'Credit Amount (₹)', 'Amount Paid (₹)', 'Balance Due (₹)', 'Payment Status'],
+      db.credit.slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0).map(c => [c.name, c.date, c.desc, c.amt, c.paid, balance(c), credStatus(c)]), ['s', 'd', 's', 'm', 'm', 'm', 's'], [24, 14, 36, 16, 16, 16, 14]],
+    ['Bills', ['Bill No', 'Date', 'Customer', 'Items', 'Bill Total (₹)', 'Paid (₹)', 'Change Given (₹)', 'Balance to Udhaar (₹)', 'Payment Mode'],
+      asc(db.bills).map(b => [b.no, b.date, b.customer, b.lines.map(l => l.item + ' x' + num(l.qty)).join('; '), b.total, b.paid, b.change, b.credit, billLabel(b)]), ['s', 'd', 's', 's', 'm', 'm', 'm', 'm', 's'], [12, 14, 22, 50, 16, 14, 16, 20, 18]],
+    ['Customer Requests', ['Date First Asked', 'Item Wanted', 'Times Asked', 'Customer(s)', 'Note', 'Status'],
+      db.requests.map(r => [r.date, r.name, r.count, r.cust.join(', '), r.note, r.done ? 'Done' : 'Pending']), ['d', 's', 'n', 's', 's', 's'], [16, 30, 12, 28, 28, 12]]
+  ];
+  const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"', H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const files = [
+    {name: '[Content_Types].xml', text: H + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + sheets.map((s, i) => '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('') + '</Types>'},
+    {name: '_rels/.rels', text: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name: 'xl/workbook.xml', text: H + '<workbook ' + NS + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + sheets.map((s, i) => '<sheet name="' + s[0] + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>').join('') + '</sheets></workbook>'},
+    {name: 'xl/_rels/workbook.xml.rels', text: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((s, i) => '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>').join('') + '<Relationship Id="rId' + (sheets.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'},
+    {name: 'xl/styles.xml', text: H + '<styleSheet ' + NS + '><numFmts count="1"><numFmt numFmtId="164" formatCode="dd\\-mmm\\-yyyy"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Arial"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Arial"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF2E7D4F"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="4"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'}
+  ];
+  sheets.forEach((s, i) => files.push({name: 'xl/worksheets/sheet' + (i + 1) + '.xml', text: sheetXml(s[1], s[2], s[3], s[4])}));
+  return zipStore(files);
+}
+function download(name, blob) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function markBackup() { db.settings.lastBackup = today(); save(); }
+function exportXlsx() { download('Maligai_Kadai_' + today() + '.xlsx', buildXlsx()); markBackup(); toast('Excel file saved'); }
+async function shareFile(name, blob) {
+  try {
+    const file = new File([blob], name, {type: blob.type});
+    if (navigator.canShare && navigator.canShare({files: [file]})) {
+      await navigator.share({files: [file], title: 'Maligai Kadai backup'});
+      markBackup(); toast('Done. If you chose Drive, the file is saved there'); render(); return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; }
+  download(name, blob); markBackup();
+  toast('File saved in Downloads. Open Google Drive app → + → Upload');
+}
+
+/* ============ start ============ */
+render();
+if ('serviceWorker' in navigator) {
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadController) { if (!S.cart.length && !$('sheet').classList.contains('open')) location.reload(); else toast('App updated. Close and open the app once to use the new version.'); }
+    hadController = true;
+  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
